@@ -2,7 +2,7 @@ import { useState } from "react";
 import { registerUser, loginUser } from "../services/authService";
 
 export default function Login() {
-  const [isRegister, setIsRegister] = useState(true); // Kayıt modunda başla
+  const [isRegister, setIsRegister] = useState(false); // Kayıt modunda başla
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
@@ -11,20 +11,23 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Önceki hataları temizle
+    setError("");
 
     try {
       if (isRegister) {
-        // Kayıt fonksiyonunu çağır
         await registerUser(email, password, username, riotId);
-        alert("🎉 Kayıt Başarılı! Hemen Firebase Firestore'a gidip users ve wallets tablolarına bakabilirsin.");
+        alert("🎉 Kayıt Başarılı!");
+        // Kayıttan sonra da cüzdana gitsin istersen buraya da ekleyebilirsin
+        window.location.href = "/wallet-test"; 
       } else {
-        // Giriş fonksiyonunu çağır
         await loginUser(email, password);
-        alert("✅ Giriş Başarılı!");
+        // alert("✅ Giriş Başarılı!"); // İstersen bunu kaldırabilirsin, direkt yönlendirsin
+        
+        // --- İŞTE BU SATIR SAYFAYI DEĞİŞTİRECEK ---
+        window.location.href = "/wallet-test"; 
       }
     } catch (err) {
-      setError(err.message); // Hatayı ekrana bas
+      setError(err.message);
     }
   };
 
