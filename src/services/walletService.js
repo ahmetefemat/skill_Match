@@ -44,3 +44,42 @@ export const checkBalance = async (userId) => {
   }
   return 0;
 };
+
+// 3. BAKİYE DÜŞME / HARCAMA FONKSİYONU (YENİ)
+export const deductCredit = async (userId, amount, description = "Lobi Maç Bedeli") => {
+  try {
+    const walletRef = doc(db, "wallets", userId);
+    const walletSnap = await getDoc(walletRef);
+
+    if (!walletSnap.exists()) {
+      throw new Error("Cüzdan bulunamadı!");
+    }
+
+    const currentBalance = walletSnap.data().guncel_kredi || 0;
+
+    // Güvenlik: Kullanıcının parası yetiyor mu?
+    if (currentBalance < amount) {
+      throw new Error("Yetersiz bakiye! Bu işlem için cüzdanınızda yeterli kredi bulunmuyor.");
+    }
+
+    // Adım 1: Cüzdan bakiyesinden miktarı düş (increment içine eksi değer vererek)
+    await updateDoc(walletRef, {
+      guncel_kredi: increment(-amount),
+      son_islem_tarihi: serverTimestamp()
+    });
+
+    // Adım 2: İşlem geçmişine harcama olarak kaydet (miktar eksi yazılır)
+    await addDoc(collection(db, "transactions"), {
+      user_id: userId,
+      tip: "harcama",
+      miktar: -amount, 
+      aciklama: description,
+      tarih: serverTimestamp()
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("Bakiye düşme hatası:", error);
+    throw error; // Hatayı UI tarafında yakalamak için fırlatıyoruz
+  }
+};
