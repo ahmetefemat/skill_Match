@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { listenToActiveMatches, joinMatch } from '../services/matchService'; 
-import { useAuth } from '../contexts/AuthContext'; 
+import { useAuth } from '../hooks/useAuth'; 
 
 export default function LiveLobby() {
   // Hem 'user' (ID için) hem 'userData' (Arayüz bilgileri için) alıyoruz

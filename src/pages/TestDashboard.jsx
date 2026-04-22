@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { auth } from "../services/firebase";
-import { addCredit, checkBalance, deductCredit } from "../services/walletService"; // deductCredit EKLENDİ
+import { addCredit, checkBalance, deductCredit } from "../services/walletService";
 import { useAuth } from "../hooks/useAuth";
 import { logoutUser } from "../services/authService";
 import { createMatch } from "../services/matchService";
 
-export default function WalletTest() {
+export default function TestDashboard() {
   const { userData, loading: authLoading } = useAuth();
   const [currentBalance, setCurrentBalance] = useState(0);
   const user = auth.currentUser;
@@ -42,20 +42,19 @@ export default function WalletTest() {
     }
   };
 
-  // HARCAMA / BAKİYE DÜŞME İŞLEMİ (YENİ)
+  // HARCAMA / BAKİYE DÜŞME İŞLEMİ
   const handleDeduct = async () => {
     try {
       const miktar = prompt("Harcamak (düşmek) istediğiniz miktarı girin:");
       if (!miktar || isNaN(miktar) || Number(miktar) <= 0) {
         return alert("Lütfen geçerli bir sayı girin.");
       }
-      
+
       await deductCredit(user.uid, Number(miktar), "Test Harcaması (Manuel)");
       alert(`✅ ${miktar} ₺ cüzdanınızdan başarıyla düşüldü!`);
       refreshBalance();
     } catch (err) {
-      // Yetersiz bakiye uyarısı buraya düşecek
-      alert("İşlem Başarısız: " + err.message); 
+      alert("İşlem Başarısız: " + err.message);
     }
   };
 
@@ -65,11 +64,10 @@ export default function WalletTest() {
       const miktar = prompt("Kaç TL'lik maç açmak istiyorsun?");
       if (!miktar || isNaN(miktar) || Number(miktar) <= 0) return;
 
-      // Şimdilik test için oyunu 'Valorant' olarak sabit verelim
       await createMatch(user.uid, "Valorant", Number(miktar));
-      
+
       alert(`✅ ${miktar} ₺ değerinde Valorant maçı başarıyla açıldı!`);
-      refreshBalance(); // Bakiyenin düştüğünü ekranda görelim
+      refreshBalance();
     } catch (err) {
       alert("Maç Açılamadı: " + err.message);
     }
@@ -79,24 +77,25 @@ export default function WalletTest() {
 
   return (
     <div className="p-10 bg-gray-900 min-h-screen text-white relative">
-      
+
       {/* ÇIKIŞ BUTONU */}
       <div className="absolute top-5 right-5">
-        <button 
-          onClick={() => logoutUser()} 
+        <button
+          onClick={() => logoutUser()}
           className="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg font-bold shadow-lg transition-all"
         >
           Güvenli Çıkış Yap
         </button>
       </div>
 
-      <h1 className="text-3xl font-extrabold mb-8 text-blue-500">SkillMatch - Backend Test Sahası</h1>
-      
+      <h1 className="text-3xl font-extrabold mb-8 text-blue-500">SkillMatch - Test Paneli</h1>
+
       <div className="bg-gray-800 p-6 rounded-xl mb-6 border border-gray-700 shadow-xl">
         <h2 className="text-xl font-semibold">
           👤 Hoş geldin, <span className="text-green-400">{userData?.kullanici_adi || "Yükleniyor..."}</span>
         </h2>
-        <p className="text-gray-400 mt-1">ID: {userData?.riot_id}</p>
+        <p className="text-gray-400 mt-1">Email: {user?.email}</p>
+        <p className="text-gray-400 mt-1">Riot ID: {userData?.riot_id || "Belirtilmemiş"}</p>
       </div>
 
       <div className="bg-gray-800 p-6 rounded-xl mb-6 border border-l-4 border-l-green-500 shadow-xl">
@@ -106,32 +105,50 @@ export default function WalletTest() {
         </p>
       </div>
 
-      {/* BUTONLAR */}
-      <div className="flex gap-4">
-        <button 
-          onClick={handleUpdate} 
-          className="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
-        >
-          Kredi Yükle (+)
-        </button>
-        
-        {/* HARCAMA BUTONU (YENİ) */}
-        <button 
-          onClick={handleDeduct} 
-          className="bg-red-600 hover:bg-red-500 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
-        >
-          Para Harca (-)
-        </button>
+      {/* TEST BUTONLARI */}
+      <div className="space-y-4">
+        <div className="flex gap-4 flex-wrap">
+          <button
+            onClick={handleUpdate}
+            className="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
+          >
+            💳 Kredi Yükle (+)
+          </button>
 
-        {/* MAÇ AÇMA BUTONU */}
-        <button 
-          onClick={handleCreateMatch} 
-          className="bg-purple-600 hover:bg-purple-500 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
-        >
-          Maç İlanı Aç (🎮)
-        </button>
+          <button
+            onClick={handleDeduct}
+            className="bg-red-600 hover:bg-red-500 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
+          >
+            💸 Para Harca (-)
+          </button>
+
+          <button
+            onClick={handleCreateMatch}
+            className="bg-purple-600 hover:bg-purple-500 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
+          >
+            🎮 Maç İlanı Aç
+          </button>
+
+          <button
+            onClick={refreshBalance}
+            className="bg-gray-700 hover:bg-gray-600 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
+          >
+            🔄 Bakiye Güncelle
+          </button>
+        </div>
       </div>
-      
+
+      {/* BİLGİ KUTUSU */}
+      <div className="mt-10 bg-blue-900/30 border border-blue-500 p-6 rounded-xl">
+        <h3 className="text-lg font-bold text-blue-400 mb-3">📋 Test Paneli Rehberi</h3>
+        <ul className="text-gray-300 space-y-2 text-sm">
+          <li>✅ <strong>Kredi Yükle:</strong> Cüzdanınıza test kredisi ekler</li>
+          <li>✅ <strong>Para Harca:</strong> Cüzdanınızdan para düşer (bakiye kontrolü yapılır)</li>
+          <li>✅ <strong>Maç İlanı Aç:</strong> Yeni bir maç açar ve para bloke eder</li>
+          <li>✅ <strong>Bakiye Güncelle:</strong> Güncel bakiyeyi yeniden çeker</li>
+          <li>⚠️ Lobi görmek için <strong>"Lobi"</strong> sayfasına git</li>
+        </ul>
+      </div>
     </div>
   );
 }

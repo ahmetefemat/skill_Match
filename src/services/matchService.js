@@ -53,13 +53,19 @@ export const listenToActiveMatches = (callback) => {
 // 3. MAÇA KATILMA FONKSİYONU (Eksik olan buydu!)
 export const joinMatch = async (matchId, userId, amount) => {
   try {
-    // Önce maçın detaylarını çekip kontrol edelim (Kendi maçı mı?)
+    // Adım 1: Maçın detaylarını çekip kontrol edelim (Kendi maçı mı?)
     const matchRef = doc(db, "matches", matchId);
-    const matchSnap = await getDoc(matchRef); // En üstteki importlara getDoc eklemeyi unutma!
+    const matchSnap = await getDoc(matchRef);
 
-// --- KRİTİK GÜVENLİK KONTROLÜ ---
+    // --- DEFENSİF KONTROL: Belge var mı? ---
+    if (!matchSnap.exists()) {
+      throw new Error("Bu maç bulunamadı veya silinmiş!");
+    }
+
+    const matchData = matchSnap.data();
+
+    // --- KRİTİK GÜVENLİK KONTROLÜ ---
     if (matchData.olusturan_id === userId) {
-      alert("Kendi açtığın maça katılamazsın! Lütfen başka bir hesapla dene."); // UI'da patlamasın diye
       throw new Error("Kendi oluşturduğunuz maça katılamazsınız!");
     }
 
@@ -68,16 +74,10 @@ export const joinMatch = async (matchId, userId, amount) => {
     }
     // --------------------------------
 
-    // 2. Para kesme ve durumu güncelleme işlemleri (eskisi gibi devam ediyor...)
+    // Adım 2: Para kesme ve durumu güncelleme
     await deductCredit(userId, amount, "Maça Katılım Bedeli (Bloke)");
     
-    await updateDoc(matchRef, {
-      durum: "oynanıyor",
-      katilan_id: userId,
-      guncellenme_tarihi: serverTimestamp()
-    });
-
-    // 2. Maçın durumunu 'oynanıyor' yap
+    // Adım 3: Maçın durumunu 'oynanıyor' yap (tek güncelleme)
     await updateDoc(matchRef, {
       durum: "oynanıyor",
       katilan_id: userId,
