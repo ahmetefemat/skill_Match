@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { listenToActiveMatches, joinMatch } from '../services/matchService'; 
 import { useAuth } from '../hooks/useAuth'; 
 
 export default function LiveLobby() {
+  const navigate = useNavigate();
   // Hem 'user' (ID için) hem 'userData' (Arayüz bilgileri için) alıyoruz
   const { user, userData } = useAuth();
   const [matches, setMatches] = useState([]);
@@ -40,9 +42,17 @@ export default function LiveLobby() {
         
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-blue-500">🎮 SkillMatch Canlı Lobi</h1>
-          <div className="text-right">
-             <p className="text-gray-400">Aktif Oyuncu: <span className="text-green-400">{userData?.kullanici_adi || "Yükleniyor..."}</span></p>
-             <p className="text-xs text-gray-500 font-mono">{user?.uid}</p>
+          <div className="flex gap-3 items-center">
+            <button
+              onClick={() => navigate("/testing")}
+              className="bg-purple-600 hover:bg-purple-500 px-6 py-2 rounded-lg font-bold shadow-lg transition-all"
+            >
+              🔧 Test Paneli
+            </button>
+            <div className="text-right">
+               <p className="text-gray-400">Aktif Oyuncu: <span className="text-green-400">{userData?.kullanici_adi || "Yükleniyor..."}</span></p>
+               <p className="text-xs text-gray-500 font-mono">{user?.uid}</p>
+            </div>
           </div>
         </div>
 
