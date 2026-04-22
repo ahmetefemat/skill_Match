@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { auth } from "../services/firebase";
 import { addCredit, checkBalance, deductCredit } from "../services/walletService";
 import { useAuth } from "../hooks/useAuth";
@@ -6,6 +7,7 @@ import { logoutUser } from "../services/authService";
 import { createMatch } from "../services/matchService";
 
 export default function TestDashboard() {
+  const navigate = useNavigate();
   const { userData, loading: authLoading } = useAuth();
   const [currentBalance, setCurrentBalance] = useState(0);
   const user = auth.currentUser;
@@ -78,8 +80,14 @@ export default function TestDashboard() {
   return (
     <div className="p-10 bg-gray-900 min-h-screen text-white relative">
 
-      {/* ÇIKIŞ BUTONU */}
-      <div className="absolute top-5 right-5">
+      {/* ÜSTTE BUTONLAR */}
+      <div className="absolute top-5 right-5 flex gap-3">
+        <button
+          onClick={() => navigate("/lobby")}
+          className="bg-green-600 hover:bg-green-500 px-6 py-2 rounded-lg font-bold shadow-lg transition-all"
+        >
+          🎮 Lobi'ye Git
+        </button>
         <button
           onClick={() => logoutUser()}
           className="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg font-bold shadow-lg transition-all"
