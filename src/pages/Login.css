@@ -1,0 +1,202 @@
+/* src/pages/Login.css */
+
+/* --- 1. ANA TAŞIYICI (SAYFA DÜZENİ) --- */
+.login-wrapper {
+    min-height: 100vh;
+    background-color: #071018; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    font-family: sans-serif;
+  }
+  
+  @media (min-width: 1024px) {
+    .login-wrapper {
+      justify-content: flex-end;
+      padding-right: 8%; 
+    }
+  }
+  
+  /* --- 2. ERİYEN ARKA PLAN GÖRSELİ --- */
+  .login-bg-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 25% center; 
+    z-index: 1;
+    -webkit-mask-image: linear-gradient(to right, rgba(0,0,0,1) 25%, rgba(0,0,0,0) 75%);
+    mask-image: linear-gradient(to right, rgba(0,0,0,1) 25%, rgba(0,0,0,0) 75%);
+    opacity: 0.85; 
+  }
+  
+  @media (max-width: 1023px) {
+    .login-bg-image {
+      object-position: center;
+      -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 80%);
+      mask-image: linear-gradient(to bottom, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 80%);
+    }
+  }
+  
+  /* --- 3. ANA CAM FORM KUTUSU --- */
+  .glass-card {
+    width: 100%;
+    max-width: 420px;
+    background: linear-gradient(135deg, rgba(16, 25, 41, 0.45), rgba(10, 25, 41, 0.15));
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 1.5rem;
+    padding: 2.5rem;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(38, 198, 218, 0.05);
+    position: relative;
+    z-index: 10;
+    animation: fadeIn 0.6s ease-out forwards;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* --- 4. BAŞLIK VE SEKME DÜZENLERİ --- */
+  .brand-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+  }
+  
+  .logo-box {
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 2px solid #26C6DA;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(38, 198, 218, 0.1);
+    box-shadow: 0 0 15px rgba(38, 198, 218, 0.3);
+  }
+  
+  .logo-box span { font-weight: 800; color: #26C6DA; font-size: 1.25rem; }
+  .brand-title { font-size: 1.75rem; font-weight: 800; letter-spacing: 0.05em; color: #fff; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+  .brand-title span { color: #26C6DA; }
+  
+  .tabs-container {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .tab-btn {
+    background: none; border: none; padding-bottom: 0.75rem;
+    font-size: 1rem; font-weight: 600; color: #9CA3AF;
+    cursor: pointer; position: relative; transition: color 0.3s;
+  }
+  
+  .tab-btn:hover { color: #fff; }
+  .tab-btn.active { color: #26C6DA; text-shadow: 0 0 8px rgba(38, 198, 218, 0.5); }
+  
+  .tab-indicator {
+    position: absolute; bottom: -1px; left: 0;
+    width: 100%; height: 2px; background-color: #26C6DA;
+    box-shadow: 0 0 10px rgba(38, 198, 218, 0.8);
+  }
+  
+  /* --- 5. ULTRA CAM İNPUTLAR VE BUTONLAR --- */
+  .input-group { margin-bottom: 1rem; }
+  .input-label { display: block; color: #D1D5DB; margin-bottom: 0.4rem; font-weight: 500; font-size: 0.8rem; text-shadow: 0 1px 2px rgba(0,0,0,0.8); }
+  
+  .neon-input {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-top: 1px solid rgba(255, 255, 255, 0.25);
+    border-left: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.75rem; 
+    padding: 0.85rem 1rem;
+    color: #fff;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.4), 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  
+  .neon-input:focus {
+    outline: none;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+    border-color: #26C6DA;
+    box-shadow: 0 0 15px rgba(38, 198, 218, 0.4), inset 0 2px 10px rgba(0, 0, 0, 0.4);
+  }
+  
+  .neon-input::placeholder { color: rgba(255, 255, 255, 0.4); }
+  .neon-input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.7; cursor: pointer; }
+  
+  .neon-btn {
+    width: 100%;
+    background: linear-gradient(135deg, rgba(38, 198, 218, 0.8), rgba(38, 198, 218, 0.4));
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-top: 1px solid rgba(255, 255, 255, 0.6); 
+    color: #061922;
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 0.85rem;
+    border-radius: 0.75rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 20px rgba(38, 198, 218, 0.3), inset 0 2px 5px rgba(255, 255, 255, 0.5);
+    margin-top: 0.5rem;
+  }
+  
+  .neon-btn:hover {
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.9), rgba(38, 198, 218, 0.6));
+    box-shadow: 0 0 25px rgba(38, 198, 218, 0.6), inset 0 2px 5px rgba(255, 255, 255, 0.6);
+    transform: translateY(-2px);
+  }
+  
+  /* --- 6. AYRIŞTIRICI VE SOSYAL BUTONLAR --- */
+  .divider { display: flex; align-items: center; text-align: center; margin: 1.25rem 0; color: #9CA3AF; font-size: 0.8rem; }
+  .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+  .divider::before { margin-right: 1em; }
+  .divider::after { margin-left: 1em; }
+  
+  .social-logins { display: flex; flex-direction: column; gap: 0.5rem; }
+  
+  .social-btn {
+    display: flex; align-items: center; justify-content: center; gap: 0.75rem;
+    width: 100%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    color: #E5E7EB;
+    font-weight: 500; font-size: 0.85rem; padding: 0.75rem;
+    border-radius: 0.75rem; cursor: pointer; transition: all 0.3s ease;
+    box-shadow: inset 0 2px 5px rgba(255, 255, 255, 0.05), 0 4px 10px rgba(0,0,0,0.2);
+  }
+  
+  .social-btn:hover {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.03));
+    border-color: rgba(255, 255, 255, 0.3); color: #fff; transform: translateY(-1px);
+  }
+  .social-btn svg { width: 18px; height: 18px; }
+  .steam-icon { fill: #fff; }
+  
+  .error-box {
+    background-color: rgba(239, 68, 68, 0.15); backdrop-filter: blur(8px); border: 1px solid rgba(239, 68, 68, 0.4);
+    color: #FCA5A5; padding: 0.75rem; border-radius: 0.5rem;
+    margin-bottom: 1rem; font-size: 0.85rem;
+  }
