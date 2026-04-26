@@ -6,7 +6,13 @@ import {
   collection, 
   addDoc, 
   serverTimestamp, 
-  getDoc 
+  getDoc,
+  query,
+  where,
+  orderBy,
+  limit,
+  getDocs,
+  onSnapshot
 } from "firebase/firestore";
 
 // 1. KREDİ YÜKLEME FONKSİYONU
@@ -82,4 +88,54 @@ export const deductCredit = async (userId, amount, description = "Lobi Maç Bede
     console.error("Bakiye düşme hatası:", error);
     throw error; // Hatayı UI tarafında yakalamak için fırlatıyoruz
   }
+};
+
+// 4. KULLANICI TRANSACTIONS SORGULAMA
+export const getTransactionHistory = async (userId, limitCount = 10) => {
+  try {
+    const q = query(
+      collection(db, "transactions"),
+      where("user_id", "==", userId),
+      orderBy("tarih", "desc"),
+      limit(limitCount)
+    );
+
+    const querySnapshot = await getDocs(q);
+    const transactions = [];
+    querySnapshot.forEach((doc) => {
+      transactions.push({ id: doc.id, ...doc.data() });
+    });
+
+    return transactions;
+  } catch (error) {
+    console.error("Transaction geçmişi sorgusu hatası:", error);
+    throw error;
+  }
+};
+
+// 5. KULLANICI TRANSACTIONS DİNLEME (Real-time)
+export const listenToUserTransactions = (userId, callback) => {
+  const q = query(
+    collection(db, "transactions"),
+    where("user_id", "==", userId),
+    orderBy("tarih", "desc"),
+    limit(10)
+  );
+
+  const unsubscribe = onSnapshot(
+    q,
+    (querySnapshot) => {
+      const transactions = [];
+      querySnapshot.forEach((doc) => {
+        transactions.push({ id: doc.id, ...doc.data() });
+      });
+      callback(transactions, null);
+    },
+    (error) => {
+      console.error("Transaction dinleme hatası:", error);
+      callback([], error);
+    }
+  );
+
+  return unsubscribe;
 };
