@@ -1,9 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "./contexts/AuthContext.jsx"; 
-import Login from "./pages/Login.jsx";
-import WalletTest from "./pages/WalletTest.jsx";
-import Lobby from './pages/Lobby.jsx'; // SADECE BURASI DEĞİŞTİ: Yeni tasarım dosyamızı çağırdık
+import { AuthProvider } from "./src/contexts/AuthProvider.jsx";
+import { useAuth } from "./src/hooks/useAuth.js";
+import Login from "./src/pages/Login.jsx";
+import WalletTest from "./src/pages/WalletTest.jsx";
+import Lobby from './src/pages/Lobby.jsx'; // SADECE BURASI DEĞİŞTİ: Yeni tasarım dosyamızı çağırdık
 
 // --- GÜVENLİK DUVARI ---
 const PrivateRoute = ({ children }) => {

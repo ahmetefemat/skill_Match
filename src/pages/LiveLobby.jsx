@@ -18,9 +18,9 @@ const LiveLobby = () => {
       isHighStakes: bet >= 200 // Bahis yüksekse true yap, kart altın rengi parlar 
     }
   */
-  const [activeRooms, setActiveRooms] = useState([]); 
-  const [onlinePlayers, setOnlinePlayers] = useState([]);
-  const [matchHistory, setMatchHistory] = useState([]);
+  const [activeRooms] = useState([]); 
+  const [onlinePlayers] = useState([]);
+  const [matchHistory] = useState([]);
   
   const [isLoading, setIsLoading] = useState(true);
 

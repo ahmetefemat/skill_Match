@@ -1,10 +1,10 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthProvider.jsx";
-import { useAuth } from "./hooks/useAuth"; 
+import { useAuth } from "./hooks/useAuth.js";
 import Login from "./pages/Login.jsx";
-import TestDashboard from "./pages/TestDashboard.jsx";
-import LiveLobby from './pages/LiveLobby.jsx';
+import WalletTest from "./pages/WalletTest.jsx";
+import Lobby from './pages/Lobby.jsx'; // SADECE BURASI DEĞİŞTİ: Yeni tasarım dosyamızı çağırdık
 
 // --- GÜVENLİK DUVARI ---
 const PrivateRoute = ({ children }) => {
@@ -31,28 +31,28 @@ function AppContent() {
   return (
     <Router>
       <Routes>
-        {/* Giriş yapılmışsa direkt lobiye at */}
+        {/* Giriş yapılmışsa direkt lobiye veya cüzdana at */}
         <Route 
           path="/" 
           element={user ? <Navigate to="/lobby" /> : <Login />} 
         />
         
-        {/* Test Paneli */}
+        {/* Cüzdan Test Sayfası */}
         <Route 
-          path="/testing" 
+          path="/wallet-test" 
           element={
             <PrivateRoute>
-              <TestDashboard />
+              <WalletTest />
             </PrivateRoute>
           } 
         />
 
-        {/* Canlı Lobi */}
+        {/* Hayrani'nin Lobisi - Artık Korumalı! */}
         <Route 
           path="/lobby" 
           element={
             <PrivateRoute>
-              <LiveLobby />
+              <Lobby /> {/* SADECE BURASI DEĞİŞTİ: Artık yeni tasarımı basıyor */}
             </PrivateRoute>
           } 
         />
