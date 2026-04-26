@@ -7,9 +7,9 @@ const Lobby = () => {
   const [activeFilter, setActiveFilter] = useState('Tümü');
   
   // VERİTABANI STATE'LERİ (Firebase bağlandığında buralar dolacak)
-  const [lobbies, setLobbies] = useState([]); 
-  const [matchHistory, setMatchHistory] = useState([]); 
-  const [transactions, setTransactions] = useState([]);
+  const [lobbies] = useState([]); 
+  const [matchHistory] = useState([]); 
+  const [transactions] = useState([]);
 
   // MODAL VE FORM STATE'LERİ
   const [showModal, setShowModal] = useState(false);

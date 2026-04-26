@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { auth } from "../services/firebase";
-import { addCredit, checkBalance, deductCredit } from "../services/walletService"; // deductCredit EKLENDİ
-import { useAuth } from "../contexts/AuthContext";
+import { addCredit, checkBalance, deductCredit } from "../services/walletService";
+import { useAuth } from "../hooks/useAuth.js";
 import { logoutUser } from "../services/authService";
 import { createMatch } from "../services/matchService";
 
@@ -10,16 +10,17 @@ export default function WalletTest() {
   const [currentBalance, setCurrentBalance] = useState(0);
   const user = auth.currentUser;
 
-  const refreshBalance = async () => {
+  const refreshBalance = useCallback(async () => {
     if (user) {
       const bakiye = await checkBalance(user.uid);
       setCurrentBalance(bakiye);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshBalance();
-  }, [user]);
+  }, [refreshBalance]);
 
   // YÜKLEME İŞLEMİ
   const handleUpdate = async () => {
