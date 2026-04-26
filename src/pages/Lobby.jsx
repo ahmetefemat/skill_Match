@@ -1,20 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Lobby.css';
+import { useAuth } from '../hooks/useAuth';
+import { auth, db } from '../services/firebase';
+import { doc, getDoc } from 'firebase/firestore';
+import { checkBalance, addCredit, listenToUserTransactions } from '../services/walletService';
+import { createMatch, listenToActiveMatches, listenToPlayingMatches, joinMatch } from '../services/matchService';
+import { logoutUser } from '../services/authService';
 
 const Lobby = () => {
+  // AUTH VE USER DATA
+  const { userData, loading: authLoading } = useAuth();
+  const user = auth.currentUser;
+
   // ANA NAVİGASYON STATE'İ
   const [activeMenu, setActiveMenu] = useState('LOBBY');
   const [activeFilter, setActiveFilter] = useState('Tümü');
   
-  // VERİTABANI STATE'LERİ (Firebase bağlandığında buralar dolacak)
-  const [lobbies] = useState([]); 
-  const [matchHistory] = useState([]); 
-  const [transactions] = useState([]);
+  // CÜZDAN STATE'LERİ
+  const [currentBalance, setCurrentBalance] = useState(0);
+  const [balanceLoading, setBalanceLoading] = useState(true);
+  
+  // VERİTABANI STATE'LERİ - Firebase entegrasyonu (Real-time)
+  const [lobbies, setLobbies] = useState([]); 
+  const [playingMatches, setPlayingMatches] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [matchesLoading, setMatchesLoading] = useState(true);
+  const [isJoiningMatch, setIsJoiningMatch] = useState(false);
+  const [selectedMatchDetail, setSelectedMatchDetail] = useState(null);
+  const [userNameMap, setUserNameMap] = useState({});
 
   // MODAL VE FORM STATE'LERİ
   const [showModal, setShowModal] = useState(false);
   const [selectedGame, setSelectedGame] = useState('Valorant');
+  const [selectedTarget, setSelectedTarget] = useState('');
   const [betAmount, setBetAmount] = useState(100);
+  const [isCreatingMatch, setIsCreatingMatch] = useState(false);
 
   // OYUNLARA GÖRE DİNAMİK HEDEFLER
   const targets = {
@@ -23,6 +43,206 @@ const Lobby = () => {
     'CS:GO': ['En az 20 Kill', '1v2 Clutch At', 'MVP Ol', 'Maç Kazan']
   };
 
+  // İLK HEDEF SEÇİMİNİ OTOMATIK YAP
+  const targetList = targets[selectedGame];
+  useEffect(() => {
+    setSelectedTarget(targetList[0]);
+  }, [selectedGame, targetList]);
+
+  // BAKIYE YÜKLE
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (user && !authLoading) {
+        setBalanceLoading(true);
+        const bakiye = await checkBalance(user.uid);
+        setCurrentBalance(bakiye);
+        setBalanceLoading(false);
+      }
+    };
+    fetchBalance();
+  }, [user, authLoading]);
+
+  // AKTİF MAÇLARI DİNLE (Real-time)
+  useEffect(() => {
+    const unsubscribe = listenToActiveMatches((activeMatches, error) => {
+      if (error) {
+        console.error("Açık maçlar dinlemesi hatası:", error);
+        setMatchesLoading(false);
+        return;
+      }
+      setLobbies(activeMatches);
+      setMatchesLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // OYNANAN MAÇLARI DİNLE (Real-time)
+  useEffect(() => {
+    const unsubscribe = listenToPlayingMatches((playing, error) => {
+      if (error) {
+        console.error("Oynanan maçlar dinlemesi hatası:", error);
+        return;
+      }
+      setPlayingMatches(playing);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  // KULLANICI TRANSACTIONS DİNLE (Real-time)
+  useEffect(() => {
+    if (!user) return;
+
+    const unsubscribe = listenToUserTransactions(user.uid, (txList, error) => {
+      if (error) {
+        console.error("İşlem geçmişi dinlemesi hatası:", error);
+        return;
+      }
+      setTransactions(txList);
+    });
+
+    return () => unsubscribe();
+  }, [user]);
+
+  // MAÇLARDA GEÇEN KULLANICI ADLARINI USERS KOLEKSİYONUNDAN ÇEK
+  useEffect(() => {
+    const allUserIds = new Set();
+
+    [...lobbies, ...playingMatches].forEach((match) => {
+      if (match?.olusturan_id) allUserIds.add(match.olusturan_id);
+      if (match?.katilan_id) allUserIds.add(match.katilan_id);
+    });
+
+    const missingUserIds = Array.from(allUserIds).filter((uid) => !userNameMap[uid]);
+    if (missingUserIds.length === 0) return;
+
+    let isCancelled = false;
+
+    const fetchUserNames = async () => {
+      const resolvedUsers = await Promise.all(
+        missingUserIds.map(async (uid) => {
+          try {
+            const userSnap = await getDoc(doc(db, "users", uid));
+            if (userSnap.exists()) {
+              const data = userSnap.data();
+              return [uid, data?.kullanici_adi || `Oyuncu-${uid.slice(0, 5)}`];
+            }
+            return [uid, `Oyuncu-${uid.slice(0, 5)}`];
+          } catch {
+            return [uid, `Oyuncu-${uid.slice(0, 5)}`];
+          }
+        })
+      );
+
+      if (isCancelled) return;
+
+      setUserNameMap((prev) => {
+        const next = { ...prev };
+        resolvedUsers.forEach(([uid, username]) => {
+          next[uid] = username;
+        });
+        return next;
+      });
+    };
+
+    fetchUserNames();
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [lobbies, playingMatches, userNameMap]);
+
+  const getUserName = (uid) => {
+    if (!uid) return "Henüz katılan yok";
+    return userNameMap[uid] || `Oyuncu-${uid.slice(0, 5)}`;
+  };
+
+  const getGameIcon = (gameName) => {
+    if (gameName === 'LoL') return '🧙‍♂️';
+    if (gameName === 'Valorant') return '🔫';
+    if (gameName === 'CS:GO') return '💣';
+    return '🎮';
+  };
+
+  // BAKIYE GÜNCELLE
+  const refreshBalance = async () => {
+    if (user) {
+      const bakiye = await checkBalance(user.uid);
+      setCurrentBalance(bakiye);
+    }
+  };
+
+  // MAÇ OLUŞTUR
+  const handleCreateMatch = async () => {
+    if (!selectedTarget || betAmount <= 0) {
+      alert("Lütfen hedef seçin ve geçerli bir miktar girin.");
+      return;
+    }
+
+    if (currentBalance < betAmount) {
+      alert("Yetersiz bakiye! Cüzdanınızda yeterli kredi bulunmamaktadır.");
+      return;
+    }
+
+    try {
+      setIsCreatingMatch(true);
+      await createMatch(user.uid, selectedGame, betAmount, selectedTarget);
+      alert(`✅ ${selectedGame} maçı başarıyla oluşturuldu! ${betAmount} ₺ bloke edildi.`);
+      setShowModal(false);
+      setBetAmount(100);
+      refreshBalance();
+    } catch (err) {
+      alert("Maç oluşturulamadı: " + err.message);
+    } finally {
+      setIsCreatingMatch(false);
+    }
+  };
+
+  // MAÇA KATIL
+  const handleJoinMatch = async (matchId) => {
+    try {
+      setIsJoiningMatch(true);
+      await joinMatch(matchId, user.uid);
+      alert(`✅ Maça başarıyla katıldınız!`);
+      refreshBalance();
+    } catch (err) {
+      const errorMsg = err.message || "Maça katılırken hata oluştu";
+      alert("Hata: " + errorMsg);
+    } finally {
+      setIsJoiningMatch(false);
+    }
+  };
+
+  // KREDİ YÜKLE
+  const handleAddCredit = async () => {
+    const miktar = prompt("Yüklemek istediğiniz kredi miktarını girin:");
+    if (!miktar || isNaN(miktar) || Number(miktar) <= 0) {
+      return alert("Lütfen geçerli bir sayı girin.");
+    }
+
+    try {
+      await addCredit(user.uid, Number(miktar));
+      alert(`✅ ${miktar} kredi başarıyla yüklendi!`);
+      refreshBalance();
+    } catch (err) {
+      alert("Kredi yükleme başarısız: " + err.message);
+    }
+  };
+
+  // ÇIKIŞ YAP
+  const handleLogout = async () => {
+    if (window.confirm('Çıkış yapmak istediğinize emin misiniz?')) {
+      try {
+        await logoutUser();
+      } catch (err) {
+        console.error('Çıkış hatası:', err);
+        alert('Çıkış yapılırken hata oluştu');
+      }
+    }
+  };
+
+  // AYARLAR
   const menus = [
     { id: 'LOBBY', label: 'LOBBY', icon: '⚏' },
     { id: 'WALLET', label: 'WALLET', icon: '💳' },
@@ -30,10 +250,17 @@ const Lobby = () => {
     { id: 'SETTINGS', label: 'SETTINGS', icon: '⚙' }
   ];
 
-  // Lobi Filtreleme Fonksiyonu
-  const filteredLobbies = activeFilter === 'Tümü' 
-    ? lobbies 
-    : lobbies.filter(lobby => lobby.game === activeFilter);
+  if (authLoading || balanceLoading) {
+    return <div className="p-10 text-white">Yükleniyor...</div>;
+  }
+
+  const visibleLobbies = activeFilter === 'Tümü'
+    ? lobbies
+    : lobbies.filter((match) => match.oyun_turu === activeFilter);
+
+  const visiblePlayingMatches = activeFilter === 'Tümü'
+    ? playingMatches
+    : playingMatches.filter((match) => match.oyun_turu === activeFilter);
 
   return (
     <div className="lobby-wrapper">
@@ -64,9 +291,8 @@ const Lobby = () => {
             👤
           </div>
           <div className="profile-info">
-            {/* Backend bağlanınca buralar dinamik olacak */}
-            <h4>Oyuncu Adı</h4>
-            <span>Bağlanıyor...</span>
+            <h4>{userData?.kullanici_adi || "Oyuncu"}</h4>
+            <span>{user?.email || "Bağlanıyor..."}</span>
           </div>
         </div>
       </aside>
@@ -79,9 +305,9 @@ const Lobby = () => {
         {/* ÜST BAR (KREDİLER) */}
         <header className="top-header">
           <div className="credit-badge">
-            <span className="credit-icon">$</span> -- Kredi
+            <span className="credit-icon">$</span> {currentBalance} Kredi
           </div>
-          <button className="btn-primary" onClick={() => setActiveMenu('WALLET')}>Add Credits</button>
+          <button className="btn-primary" onClick={() => setActiveMenu('WALLET')}>Kredi Yükle</button>
         </header>
 
         {/* -------------------------------------------
@@ -108,36 +334,119 @@ const Lobby = () => {
               </div>
             </div>
 
-            <div className="cards-grid">
-              {/* Firebase'den gelen iddialar buraya maplenecek */}
-              {filteredLobbies.map((lobby) => (
-                <div key={lobby.id} className="match-card">
-                  <div className="card-user">
-                    <img src={lobby.avatar} alt={lobby.username} />
-                    <div className="card-user-info">
-                      <h3>{lobby.username}</h3>
-                      <p>Rank: {lobby.rank}</p>
-                    </div>
+            {/* AÇIK MAÇLAR BÖLÜMÜ */}
+            <div style={{marginBottom: '40px'}}>
+              <h2 style={{color: '#fff', marginBottom: '16px', fontSize: '16px', fontWeight: '600', textTransform: 'uppercase', opacity: 0.8}}>📍 Açık İddialar</h2>
+              <div className="cards-grid">
+                {matchesLoading ? (
+                  <div className="match-card" style={{ textAlign: 'center', opacity: 0.7 }}>
+                    <p>Açık maçlar yükleniyor...</p>
                   </div>
-                  <div className="card-target">
-                    {lobby.game} | {lobby.target}
+                ) : visibleLobbies.length === 0 ? (
+                  <div className="match-card" style={{ textAlign: 'center', opacity: 0.7 }}>
+                    <p>Şu an açık bir maç bulunmuyor. Yeni maç açarak ilk oyuncu ol!</p>
                   </div>
-                  <div className="card-footer">
-                    <div className="bet-info">
-                      <span className="bet-label">BAHİS</span>
-                      <span className="bet-value">{lobby.betAmount} Kredi</span>
-                    </div>
-                    <button className="btn-outline">Eşleşmeyi Kabul Et</button>
-                  </div>
-                </div>
-              ))}
+                ) : (
+                  visibleLobbies.map((lobby) => (
+                    <div 
+                      key={lobby.id} 
+                      className="match-card match-card-clickable match-card--pending"
+                      onClick={() => setSelectedMatchDetail(lobby)}
+                    >
+                      <div className="match-card-top">
+                        <span className="game-pill">{getGameIcon(lobby.oyun_turu)} {lobby.oyun_turu}</span>
+                        <span className="status-pill status-pill--waiting">Rakip Bekliyor</span>
+                      </div>
 
-              {/* Sabit "İddia Ekle" Kartı */}
-              <div className="match-card add-card" onClick={() => setShowModal(true)}>
-                <span className="add-icon">+</span>
-                <p>Kendi iddialarını<br/>oluştur ve rakiplerini<br/>bekle.</p>
+                      <div className="card-user">
+                        <div className="card-avatar">
+                          {getUserName(lobby.olusturan_id).substring(0, 1).toUpperCase()}
+                        </div>
+                        <div className="card-user-info">
+                          <h3>{getUserName(lobby.olusturan_id)}</h3>
+                          <p>Hedef: {lobby.hedef || 'Belirtilmemiş'}</p>
+                        </div>
+                      </div>
+                      <div className="card-target">
+                        {lobby.oyun_turu} | {lobby.hedef}
+                      </div>
+                      <div className="card-footer">
+                        <div className="bet-info">
+                          <span className="bet-label">BAHİS</span>
+                          <span className="bet-value">{lobby.giris_ucreti} Kredi</span>
+                        </div>
+                        <button
+                          className="btn-join"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleJoinMatch(lobby.id);
+                          }}
+                          disabled={isJoiningMatch || lobby.olusturan_id === user?.uid}
+                          title={lobby.olusturan_id === user?.uid ? 'Senin iddian' : 'Bu maça katıl'}
+                        >
+                          {isJoiningMatch ? 'Katılıyor...' : 'Eşleşmeyi Kabul Et'}
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+
+                {/* Sabit "İddia Ekle" Kartı */}
+                <div className="match-card add-card" onClick={() => setShowModal(true)}>
+                  <span className="add-icon">+</span>
+                  <p>Kendi iddialarını<br/>oluştur ve rakiplerini<br/>bekle.</p>
+                </div>
               </div>
             </div>
+
+            {/* OYNANAN MAÇLAR BÖLÜMÜ */}
+            {visiblePlayingMatches.length > 0 && (
+              <div>
+                <h2 style={{color: '#fff', marginBottom: '16px', fontSize: '16px', fontWeight: '600', textTransform: 'uppercase', opacity: 0.8}}>⚔️ Canlı Maçlar</h2>
+                <div className="cards-grid">
+                  {visiblePlayingMatches.map((match) => (
+                    <div 
+                      key={match.id} 
+                      className="match-card match-card-clickable match-card--live"
+                      onClick={() => setSelectedMatchDetail(match)}
+                    >
+                      <div className="match-card-top">
+                        <span className="game-pill">{getGameIcon(match.oyun_turu)} {match.oyun_turu}</span>
+                        <span className="status-pill status-pill--live">Canlı Oynanıyor</span>
+                      </div>
+
+                      <div className="card-user">
+                        <div className="card-avatar card-avatar-live">
+                          ⚔️
+                        </div>
+                        <div className="card-user-info">
+                          <h3>{getUserName(match.olusturan_id)} vs {getUserName(match.katilan_id)}</h3>
+                          <p>Canlı eşleşme devam ediyor</p>
+                        </div>
+                      </div>
+
+                      <div className="card-users-line">
+                        <span>👤 {getUserName(match.olusturan_id)}</span>
+                        <span>⚔️ {getUserName(match.katilan_id)}</span>
+                      </div>
+
+                      <div className="card-target">
+                        {match.oyun_turu} | {match.hedef}
+                      </div>
+                      <div className="card-footer">
+                        <div className="bet-info">
+                          <span className="bet-label">BAHİS</span>
+                          <span className="bet-value">{match.giris_ucreti} Kredi</span>
+                        </div>
+                        <button className="btn-join btn-join-live" disabled>
+                          Devam Ediyor
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </>
         )}
 
@@ -150,38 +459,10 @@ const Lobby = () => {
               <h1>Maç Geçmişi</h1>
             </div>
 
-            {matchHistory.length === 0 ? (
-              <div className="empty-history">
-                <div style={{fontSize: '40px', marginBottom: '16px'}}>⏱</div>
-                <p>Henüz tamamlanmış bir maçın bulunmuyor.</p>
-              </div>
-            ) : (
-              <div className="history-section">
-                <div className="history-table-header">
-                  <span>Oyun</span>
-                  <span>Hedef / İddia</span>
-                  <span>Sonuç</span>
-                  <span>İstatistik</span>
-                  <span style={{textAlign: 'right'}}>Miktar</span>
-                </div>
-
-                {matchHistory.map((match) => (
-                  <div key={match.id} className="history-row">
-                    <div className="history-game">
-                      {match.game === 'Valorant' ? '🔫' : match.game === 'CS:GO' ? '💣' : '🧙‍♂️'} {match.game}
-                    </div>
-                    <div className="history-target">{match.target}</div>
-                    <div className={`history-status status-${match.result.toLowerCase()}`}>
-                      {match.result === 'WIN' ? 'GALİBİYET' : match.result === 'LOSS' ? 'MAĞLUBİYET' : 'BEKLEMEDE'}
-                    </div>
-                    <div className="history-stats">{match.stats}</div>
-                    <div className={`history-amount ${match.result === 'WIN' ? 'status-win' : match.result === 'LOSS' ? 'status-loss' : 'status-pending'}`}>
-                      {match.result === 'WIN' ? '+' : match.result === 'LOSS' ? '-' : ''}{match.amount} Kredi
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div className="empty-history">
+              <div style={{fontSize: '40px', marginBottom: '16px'}}>⏱</div>
+              <p>Henüz tamamlanmış bir maçın bulunmuyor.</p>
+            </div>
           </>
         )}
 
@@ -198,26 +479,26 @@ const Lobby = () => {
               <div className="wallet-left">
                 <div className="balance-card">
                   <span className="balance-label">MEVCUT BAKİYE</span>
-                  <h1 className="balance-amount"><span className="currency-symbol">$</span> -- Kredi</h1>
+                  <h1 className="balance-amount"><span className="currency-symbol">₺</span> {currentBalance} Kredi</h1>
                   <div className="balance-actions">
-                    <button className="btn-primary" style={{flex: 1}}>Kredi Yükle</button>
-                    <button className="btn-outline" style={{flex: 1, borderColor: 'rgba(255,255,255,0.2)', color: '#fff'}}>Çekim Talebi</button>
+                    <button className="btn-primary" style={{flex: 1}} onClick={handleAddCredit}>Kredi Yükle</button>
+                    <button className="btn-outline" style={{flex: 1, borderColor: 'rgba(255,255,255,0.2)', color: '#fff'}} onClick={() => alert('Çekim özelliği yakında!')}>Çekim Talebi</button>
                   </div>
                 </div>
 
                 <div className="quick-load-section">
                   <h3 className="section-subtitle">Hızlı Yükleme Paketleri</h3>
                   <div className="credit-packages">
-                    <button className="pack-btn">
+                    <button className="pack-btn" onClick={() => { const inp = prompt('500 ₺ yüklemek istediğinizi onaylıyor musunuz?'); if(inp === 'evet') handleAddCredit(); }}>
                       <span className="pack-amount">500</span>
                       <span className="pack-label">Kredi</span>
                     </button>
-                    <button className="pack-btn popular">
+                    <button className="pack-btn popular" onClick={() => { const inp = prompt('1500 ₺ yüklemek istediğinizi onaylıyor musunuz? (POPÜLER)'); if(inp === 'evet') handleAddCredit(); }}>
                       <div className="popular-badge">POPÜLER</div>
                       <span className="pack-amount">1500</span>
                       <span className="pack-label">Kredi</span>
                     </button>
-                    <button className="pack-btn">
+                    <button className="pack-btn" onClick={() => { const inp = prompt('5000 ₺ yüklemek istediğinizi onaylıyor musunuz?'); if(inp === 'evet') handleAddCredit(); }}>
                       <span className="pack-amount">5000</span>
                       <span className="pack-label">Kredi</span>
                     </button>
@@ -233,8 +514,29 @@ const Lobby = () => {
                     <p>Henüz bir hesap hareketin bulunmuyor.</p>
                   </div>
                 ) : (
-                  <div className="transaction-list">
-                    {/* İşlemler buraya maplenecek */}
+                  <div className="transaction-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {transactions.map((tx) => (
+                      <div key={tx.id} style={{ 
+                        padding: '12px', 
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        borderRadius: '8px',
+                        fontSize: '13px'
+                      }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                          <span style={{ color: '#ddd', fontWeight: '600' }}>{tx.aciklama}</span>
+                          <span style={{ 
+                            color: tx.miktar > 0 ? '#4ade80' : '#f87171',
+                            fontWeight: 'bold'
+                          }}>
+                            {tx.miktar > 0 ? '+' : ''}{tx.miktar} ₺
+                          </span>
+                        </div>
+                        <span style={{ color: '#999', fontSize: '11px' }}>
+                          {tx.tarih?.toDate?.().toLocaleDateString?.('tr-TR') || 'Tarih bilinmiyor'}
+                        </span>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
@@ -290,6 +592,36 @@ const Lobby = () => {
                   </div>
                 </div>
               </div>
+
+              <div className="settings-card" style={{gridColumn: '1 / -1', borderTop: '2px solid rgba(255, 255, 255, 0.1)'}}>
+                <h3 className="section-subtitle" style={{marginBottom: '20px'}}>Hesap</h3>
+                <button 
+                  className="btn-danger"
+                  onClick={handleLogout}
+                  style={{
+                    width: 'fit-content',
+                    backgroundColor: 'rgba(255, 59, 48, 0.15)',
+                    color: '#ff3b30',
+                    border: '1px solid rgba(255, 59, 48, 0.3)',
+                    padding: '10px 20px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.backgroundColor = 'rgba(255, 59, 48, 0.25)';
+                    e.target.style.borderColor = 'rgba(255, 59, 48, 0.5)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.backgroundColor = 'rgba(255, 59, 48, 0.15)';
+                    e.target.style.borderColor = 'rgba(255, 59, 48, 0.3)';
+                  }}
+                >
+                  🚪 Çıkış Yap
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -321,7 +653,7 @@ const Lobby = () => {
 
               <div className="form-group">
                 <label className="form-label">İddia Hedefi</label>
-                <select className="glass-select">
+                <select className="glass-select" value={selectedTarget} onChange={(e) => setSelectedTarget(e.target.value)}>
                   {targets[selectedGame].map(t => (
                     <option key={t} value={t}>{t}</option>
                   ))}
@@ -330,7 +662,7 @@ const Lobby = () => {
 
               <div className="form-group">
                 <label className="form-label">Bahis Miktarı (Kredi)</label>
-                <input type="number" className="glass-input" value={betAmount} onChange={(e) => setBetAmount(e.target.value)} step="50" min="50" />
+                <input type="number" className="glass-input" value={betAmount} onChange={(e) => setBetAmount(Number(e.target.value))} step="50" min="50" />
               </div>
 
               <div className="bet-summary">
@@ -338,9 +670,67 @@ const Lobby = () => {
                 <h2>{betAmount} Kredi</h2>
               </div>
 
-              <button className="btn-primary" style={{width: '100%', marginTop: '24px', padding: '16px'}} onClick={() => setShowModal(false)}>
-                İDDİAYI YAYINLA
+              <button 
+                className="btn-primary" 
+                style={{width: '100%', marginTop: '24px', padding: '16px'}} 
+                onClick={handleCreateMatch}
+                disabled={isCreatingMatch}
+              >
+                {isCreatingMatch ? 'Oluşturuluyor...' : 'İDDİAYI YAYINLA'}
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* =========================================
+            MAÇ DETAY MODALI
+        ========================================== */}
+        {selectedMatchDetail && (
+          <div className="modal-overlay" onClick={() => setSelectedMatchDetail(null)}>
+            <div className="create-modal" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-close" onClick={() => setSelectedMatchDetail(null)}>×</button>
+              <h2 className="modal-title">Maç Detayı</h2>
+
+              <div className="bet-summary" style={{ marginBottom: '20px' }}>
+                <span>{selectedMatchDetail.oyun_turu} | {selectedMatchDetail.hedef}</span>
+                <h2>{selectedMatchDetail.giris_ucreti} Kredi</h2>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Katılımcılar</label>
+                <div style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '12px',
+                  padding: '16px'
+                }}>
+                  <div style={{ marginBottom: '12px', color: '#fff' }}>
+                    👤 Oluşturan: {getUserName(selectedMatchDetail.olusturan_id)}
+                  </div>
+                  <div style={{ color: '#fff' }}>
+                    ⚔️ Katılan: {getUserName(selectedMatchDetail.katilan_id)}
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Durum</label>
+                <div style={{
+                  display: 'inline-block',
+                  padding: '8px 14px',
+                  borderRadius: '999px',
+                  background: selectedMatchDetail.durum === 'oynanıyor'
+                    ? 'rgba(76, 175, 80, 0.18)'
+                    : 'rgba(255, 193, 7, 0.18)',
+                  border: selectedMatchDetail.durum === 'oynanıyor'
+                    ? '1px solid rgba(76, 175, 80, 0.4)'
+                    : '1px solid rgba(255, 193, 7, 0.4)',
+                  color: '#fff',
+                  fontWeight: '600'
+                }}>
+                  {selectedMatchDetail.durum === 'oynanıyor' ? 'CANLI OYNANIYOR' : 'RAKİP BEKLİYOR'}
+                </div>
+              </div>
             </div>
           </div>
         )}

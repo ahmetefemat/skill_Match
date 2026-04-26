@@ -1,5 +1,11 @@
 # React + Vite
 
+## SkillMatch Notes
+
+- Active lobby page: `src/pages/Lobby.jsx`
+- Active lobby route: `/lobby` in `src/App.jsx`
+- Legacy `src/pages/LiveLobby.jsx` and old lobby-only components were removed as unused
+
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
