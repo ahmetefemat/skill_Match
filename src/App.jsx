@@ -3,7 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider } from "./contexts/AuthProvider.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import Login from "./pages/Login.jsx";
-import Lobby from './pages/Lobby.jsx'; // SADECE BURASI DEĞİŞTİ: Yeni tasarım dosyamızı çağırdık
+import Lobby from './pages/Lobby.jsx';
+import Dashboard from './pages/Dashboard.jsx';
+import Profile from './pages/Profile.jsx';
 
 // --- GÜVENLİK DUVARI ---
 const PrivateRoute = ({ children }) => {
@@ -41,7 +43,27 @@ function AppContent() {
           path="/lobby" 
           element={
             <PrivateRoute>
-              <Lobby /> {/* SADECE BURASI DEĞİŞTİ: Artık yeni tasarımı basıyor */}
+              <Lobby />
+            </PrivateRoute>
+          } 
+        />
+
+        {/* Dashboard - Korumalı sayfa */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          } 
+        />
+
+        {/* Profile - Korumalı sayfa */}
+        <Route 
+          path="/profile" 
+          element={
+            <PrivateRoute>
+              <Profile />
             </PrivateRoute>
           } 
         />
