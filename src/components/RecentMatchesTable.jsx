@@ -26,7 +26,6 @@ const RecentMatchesTable = ({ matches = [], onMatchClick, onViewDetails }) => {
   };
 
   const handleRowClick = (match) => {
-    // TODO: Connect to match details page / modal when backend is ready
     if (onMatchClick) {
       onMatchClick(match);
     } else {
@@ -36,7 +35,6 @@ const RecentMatchesTable = ({ matches = [], onMatchClick, onViewDetails }) => {
 
   const handleViewDetails = (e, match) => {
     e.stopPropagation();
-    // TODO: Open match details modal or navigate to match page
     if (onViewDetails) {
       onViewDetails(match);
     } else {
@@ -72,8 +70,20 @@ const RecentMatchesTable = ({ matches = [], onMatchClick, onViewDetails }) => {
                   </td>
                   <td className="opponent-cell">{match.opponent}</td>
                   <td className="result-cell">
-                    <span className={`result-text ${match.result === 'won' ? 'won' : 'lost'}`}>
-                      {match.result === 'won' ? '✓ Won' : '✗ Lost'}
+                    <span
+                      className={`result-text ${
+                        match.result === 'won'
+                          ? 'won'
+                          : match.result === 'lost'
+                            ? 'lost'
+                            : 'pending'
+                      }`}
+                    >
+                      {match.result === 'won'
+                        ? '✓ Won'
+                        : match.result === 'lost'
+                          ? '✗ Lost'
+                          : '… Pending'}
                     </span>
                   </td>
                   <td className="credit-cell">

@@ -6,6 +6,9 @@ import Login from "./pages/Login.jsx";
 import Lobby from './pages/Lobby.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import Profile from './pages/Profile.jsx';
+import Landing from './pages/Landing.jsx';
+import Match from './pages/Match.jsx';
+import TestDashboard from './pages/TestDashboard.jsx';
 
 // --- GÜVENLİK DUVARI ---
 const PrivateRoute = ({ children }) => {
@@ -38,6 +41,9 @@ function AppContent() {
           element={user ? <Navigate to="/lobby" /> : <Login />} 
         />
 
+        {/* Landing - Public page */}
+        <Route path="/landing" element={<Landing />} />
+
         {/* Hayrani'nin Lobisi - Artık Korumalı! */}
         <Route 
           path="/lobby" 
@@ -58,6 +64,16 @@ function AppContent() {
           } 
         />
 
+        {/* Test Dashboard - Korumalı sayfa */}
+        <Route
+          path="/testing"
+          element={
+            <PrivateRoute>
+              <TestDashboard />
+            </PrivateRoute>
+          }
+        />
+
         {/* Profile - Korumalı sayfa */}
         <Route 
           path="/profile" 
@@ -66,6 +82,16 @@ function AppContent() {
               <Profile />
             </PrivateRoute>
           } 
+        />
+
+        {/* Match detail - Korumalı sayfa */}
+        <Route
+          path="/match/:matchId"
+          element={
+            <PrivateRoute>
+              <Match />
+            </PrivateRoute>
+          }
         />
 
         {/* Yanlış yolları ana sayfaya yönlendir */}

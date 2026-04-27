@@ -1,20 +1,27 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
+import { checkBalance, getTransactionHistory } from '../services/walletService';
+import { getUserMatchHistory } from '../services/matchService';
+import {
+  buildAchievements,
+  buildLinkedAccounts,
+  buildUserProfile,
+  getUserById,
+  getUsersByIds,
+  resolveStatsOverrides,
+} from '../services/userService';
+import {
+  buildMatchStats,
+  buildWalletSummary,
+  mapMatchesForTable,
+  mapTransactions,
+} from '../services/statsService';
 import StatCard from '../components/StatCard';
 import ProfileHeader from '../components/ProfileHeader';
 import LinkedAccountCard from '../components/LinkedAccountCard';
 import TransactionItem from '../components/TransactionItem';
 import AchievementCard from '../components/AchievementCard';
 import RecentMatchesTable from '../components/RecentMatchesTable';
-import {
-  mockUserProfile,
-  mockProfileStats,
-  mockLinkedAccounts,
-  mockWalletData,
-  mockTransactionHistory,
-  mockProfileMatches,
-  mockAchievements,
-} from '../mockData/profileMockData';
 import './Profile.css';
 
 /**
@@ -23,26 +30,97 @@ import './Profile.css';
  *
  * Architecture:
  * - All data flows through props to child components
- * - Mock data is structured like backend API responses
- * - TODO: Backend developer can replace mockData with Firebase/API calls
+ * - Data is fetched from Firebase services
  * - Handler functions are frontend-only (console.log, alerts, or state changes)
  */
 
 const Profile = () => {
-  const { loading: authLoading } = useAuth();
-
-  // TODO: Replace mock data with real user data from Firebase
-  const [userProfile] = useState(mockUserProfile);
-  const [userStats] = useState(mockProfileStats);
-  const [linkedAccounts] = useState(mockLinkedAccounts);
-  const [walletData] = useState(mockWalletData);
-  const [transactions] = useState(mockTransactionHistory);
-  const [recentMatches] = useState(mockProfileMatches);
-  const [achievements] = useState(mockAchievements);
+  const { user, userData, loading: authLoading } = useAuth();
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState(buildUserProfile({}, null, 0));
+  const [userStats, setUserStats] = useState(buildMatchStats([], null));
+  const [linkedAccounts, setLinkedAccounts] = useState([]);
+  const [walletData, setWalletData] = useState({
+    currentBalance: 0,
+    totalEarnings: 0,
+    totalWithdrawals: 0,
+    pendingTransactions: 0,
+  });
+  const [transactions, setTransactions] = useState([]);
+  const [recentMatches, setRecentMatches] = useState([]);
+  const [achievements, setAchievements] = useState([]);
 
   // State for user interactions
   // TODO: Implement edit modal when backend is ready
   // const [showEditModal, setShowEditModal] = useState(false);
+
+  const loadProfileData = useCallback(async () => {
+    if (!user) {
+      return;
+    }
+
+    setProfileLoading(true);
+    try {
+      const [balanceResult, transactionResult, matchResult, userResult] =
+        await Promise.allSettled([
+          checkBalance(user.uid),
+          getTransactionHistory(user.uid, 10),
+          getUserMatchHistory(user.uid, 10),
+          getUserById(user.uid),
+        ]);
+
+      const balanceValue =
+        balanceResult.status === "fulfilled" ? balanceResult.value : null;
+      const transactionData =
+        transactionResult.status === "fulfilled" ? transactionResult.value : [];
+      const matchData =
+        matchResult.status === "fulfilled" ? matchResult.value : [];
+      const freshUserData =
+        userResult.status === "fulfilled" ? userResult.value : null;
+
+      const mergedUserData = freshUserData || userData || {};
+      const profileBalance =
+        mergedUserData.balance ??
+        mergedUserData.guncel_kredi ??
+        mergedUserData.currentBalance ??
+        mergedUserData.bakiye;
+      const effectiveBalance =
+        balanceValue || balanceValue === 0
+          ? balanceValue
+          : profileBalance || 0;
+
+      const opponentIds = matchData
+        .map((match) =>
+          match.olusturan_id === user.uid
+            ? match.katilan_id
+            : match.olusturan_id
+        )
+        .filter(Boolean);
+      const opponentMap = await getUsersByIds(opponentIds);
+
+      const profile = buildUserProfile(mergedUserData, user, effectiveBalance || 0);
+      setUserProfile(profile);
+      setLinkedAccounts(buildLinkedAccounts(mergedUserData));
+
+      const statsOverrides = resolveStatsOverrides(mergedUserData);
+      setUserStats(buildMatchStats(matchData, user.uid, statsOverrides));
+      setRecentMatches(mapMatchesForTable(matchData, user.uid, opponentMap));
+
+      setTransactions(mapTransactions(transactionData, effectiveBalance || 0));
+      setWalletData(buildWalletSummary(transactionData, effectiveBalance || 0));
+      setAchievements(buildAchievements(mergedUserData));
+    } catch (error) {
+      console.error('Profile data load error:', error);
+    } finally {
+      setProfileLoading(false);
+    }
+  }, [user, userData]);
+
+  useEffect(() => {
+    if (!authLoading) {
+      loadProfileData();
+    }
+  }, [authLoading, loadProfileData]);
 
   // ============================================
   // HANDLER FUNCTIONS FOR USER INTERACTIONS
@@ -97,7 +175,7 @@ const Profile = () => {
   // RENDER
   // ============================================
 
-  if (authLoading) {
+  if (authLoading || profileLoading) {
     return (
       <div className="profile-loading">
         <div className="loading-spinner">Loading Profile...</div>
@@ -240,14 +318,18 @@ const Profile = () => {
       {/* ACHIEVEMENTS SECTION */}
       <section className="profile-section">
         <h2 className="section-title">Achievements ({achievements.length})</h2>
-        <div className="achievements-grid">
-          {achievements.map((achievement) => (
-            <AchievementCard
-              key={achievement.id}
-              achievement={achievement}
-            />
-          ))}
-        </div>
+        {achievements.length === 0 ? (
+          <p className="empty-state">No achievements yet.</p>
+        ) : (
+          <div className="achievements-grid">
+            {achievements.map((achievement) => (
+              <AchievementCard
+                key={achievement.id}
+                achievement={achievement}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* TODO: Connect all sections to real Firebase data */}

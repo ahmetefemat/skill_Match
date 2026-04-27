@@ -64,8 +64,6 @@ const TransactionItem = ({ transaction }) => {
           Balance: ₺{transaction.balance?.toLocaleString()}
         </span>
       </div>
-
-      {/* TODO: Connect to real transaction data from Firebase */}
     </div>
   );
 };

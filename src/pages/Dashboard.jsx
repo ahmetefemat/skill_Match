@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { auth } from '../services/firebase';
 import { checkBalance } from '../services/walletService';
+import { getUserMatchHistory } from '../services/matchService';
+import { getUserById, getUsersByIds } from '../services/userService';
+import {
+  buildMatchStats,
+  buildPerformanceTrend,
+  mapMatchesForTable,
+} from '../services/statsService';
 import StatCard from '../components/StatCard';
 import ChartCard from '../components/ChartCard';
 import RecentMatchesTable from '../components/RecentMatchesTable';
 import WinLossChart from '../components/WinLossChart';
 import PerformanceChart from '../components/PerformanceChart';
-import {
-  mockUser,
-  mockStats,
-  mockChartData,
-  mockRecentMatches,
-} from '../mockData/dashboardMockData';
 import './Dashboard.css';
 
 /**
@@ -21,39 +21,30 @@ import './Dashboard.css';
  *
  * Architecture:
  * - All data flows through props to child components
- * - Mock data is structured like backend API responses
- * - TODO: Backend developer can replace mockData with Firebase/API calls
+ * - Data is fetched from Firebase services
  * - Handler functions are frontend-only (console.log, alerts, or state changes)
  */
 
-// TODO: Create async function to fetch real dashboard data from Firebase
-// async function fetchDashboardData(userId) {
-//   // TODO: Implement Firebase Firestore queries to fetch:
-//   // - User profile from /users/{userId}
-//   // - User stats from /userStats/{userId}
-//   // - Recent matches from /matches with userId filter
-//   // - Wallet balance from /wallets/{userId}
-//   console.log('TODO: Fetch dashboard data for user:', userId);
-//   // return { user: realUser, stats: realStats, matches: realMatches };
-// }
-
 const Dashboard = () => {
-  const { loading: authLoading } = useAuth();
-  const user = auth.currentUser;
+  const { user, userData, loading: authLoading } = useAuth();
+  const [userStats, setUserStats] = useState(buildMatchStats([], null));
+  const [recentMatches, setRecentMatches] = useState([]);
+  const [chartData, setChartData] = useState({ labels: [], data: [] });
+  const [dataLoading, setDataLoading] = useState(true);
+  const [profileData, setProfileData] = useState(null);
 
-  // TODO: Replace mockUser with real user data from Firebase
-  const [dashboardUser] = useState(mockUser);
+  const dashboardUser = {
+    username:
+      profileData?.kullanici_adi ||
+      profileData?.username ||
+      userData?.kullanici_adi ||
+      user?.displayName ||
+      'Player',
+    rank: profileData?.rank || userData?.rank || 'Unranked',
+  };
 
-  // TODO: Replace mockStats with real stats from Firebase
-  const [userStats] = useState(mockStats);
-
-  // TODO: Replace mockRecentMatches with real match history from Firebase
-  const [recentMatches] = useState(mockRecentMatches);
-
-  // State for balance (currently fetching from Firebase)
-  // TODO: Later integrate balance into main fetchDashboardData
+  // State for balance
   const [balance, setBalance] = useState(0);
-  const [balanceLoading, setBalanceLoading] = useState(true);
 
   // State for user interactions (prepared for future modal/nav features)
   // eslint-disable-next-line no-unused-vars
@@ -61,23 +52,63 @@ const Dashboard = () => {
   // eslint-disable-next-line no-unused-vars
   const [selectedMatchDetail, setSelectedMatchDetail] = useState(null);
 
-  // Fetch current balance from Firebase wallet service
+  const loadDashboardData = useCallback(async () => {
+    if (!user) {
+      return;
+    }
+
+    setDataLoading(true);
+    try {
+      const [balanceResult, matchResult, userResult] =
+        await Promise.allSettled([
+          checkBalance(user.uid),
+          getUserMatchHistory(user.uid, 10),
+          getUserById(user.uid),
+        ]);
+
+      const balanceValue =
+        balanceResult.status === "fulfilled" ? balanceResult.value : null;
+      const matches =
+        matchResult.status === "fulfilled" ? matchResult.value : [];
+      const freshUserData =
+        userResult.status === "fulfilled" ? userResult.value : null;
+
+      const opponentIds = matches
+        .map((match) =>
+          match.olusturan_id === user.uid
+            ? match.katilan_id
+            : match.olusturan_id
+        )
+        .filter(Boolean);
+      const opponentMap = await getUsersByIds(opponentIds);
+
+      const profileBalance =
+        freshUserData?.balance ??
+        freshUserData?.guncel_kredi ??
+        freshUserData?.currentBalance ??
+        freshUserData?.bakiye;
+      const effectiveBalance =
+        balanceValue || balanceValue === 0
+          ? balanceValue
+          : profileBalance || 0;
+
+      setProfileData(freshUserData || null);
+      setBalance(effectiveBalance || 0);
+      setUserStats(buildMatchStats(matches, user.uid));
+      setChartData(buildPerformanceTrend(matches));
+      setRecentMatches(mapMatchesForTable(matches, user.uid, opponentMap));
+    } catch (error) {
+      console.error('Dashboard data load error:', error);
+    } finally {
+      setDataLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
-    const fetchBalance = async () => {
-      if (user && !authLoading) {
-        setBalanceLoading(true);
-        try {
-          const bal = await checkBalance(user.uid);
-          setBalance(bal);
-        } catch (error) {
-          console.error('Error fetching balance:', error);
-          setBalance(mockUser.balance);
-        }
-        setBalanceLoading(false);
-      }
-    };
-    fetchBalance();
-  }, [user, authLoading]);
+    if (!authLoading) {
+      loadDashboardData();
+    }
+  }, [authLoading, loadDashboardData]);
 
   // ============================================
   // HANDLER FUNCTIONS FOR USER INTERACTIONS
@@ -113,15 +144,13 @@ const Dashboard = () => {
     setSelectedMatchDetail(match);
     // TODO: Open modal or navigate to /matches/{matchId}
     alert(
-      `Match Details:\nGame: ${match.game}\nOpponent: ${match.opponent}\nResult: ${match.result}\nK/D/A: ${match.kills}/${match.deaths}/${match.assists}`
+      `Match Details:\nGame: ${match.game}\nOpponent: ${match.opponent}\nResult: ${match.result}`
     );
   };
 
-  // TODO: Implement real refresh function with Firebase data
   const handleRefreshStats = () => {
     console.log('Refresh Stats clicked');
-    alert('Stats will refresh with latest data from backend!');
-    // TODO: Call fetchDashboardData(user.uid)
+    loadDashboardData();
   };
 
   // TODO: Navigate to wallet/transaction history page
@@ -135,7 +164,7 @@ const Dashboard = () => {
   // RENDER
   // ============================================
 
-  if (authLoading || balanceLoading) {
+  if (authLoading || dataLoading) {
     return (
       <div className="dashboard-loading">
         <div className="loading-spinner">Loading Dashboard...</div>
@@ -171,7 +200,7 @@ const Dashboard = () => {
           >
             <span className="balance-label">Current Balance</span>
             <span className="balance-amount">
-              ₺{balanceLoading ? '...' : balance.toLocaleString()}
+              ₺{dataLoading ? '...' : balance.toLocaleString()}
             </span>
           </div>
           <button
@@ -235,8 +264,8 @@ const Dashboard = () => {
         <div className="chart-col chart-col--large">
           <ChartCard title="Performance Trend">
             <PerformanceChart
-              data={mockChartData.performanceTrend.data}
-              labels={mockChartData.performanceTrend.labels}
+              data={chartData.data}
+              labels={chartData.labels}
               title="Score Progression"
               yAxisLabel="Score"
               lineColor="rgba(0, 245, 212, 1)"

@@ -35,8 +35,6 @@ const AchievementCard = ({ achievement }) => {
         <p className="achievement-description">{achievement.description}</p>
         <span className="achievement-rarity">{achievement.rarity}</span>
       </div>
-
-      {/* TODO: Connect to real achievements from Firebase */}
     </div>
   );
 };

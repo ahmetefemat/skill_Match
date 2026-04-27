@@ -5,6 +5,7 @@ import { addCredit, checkBalance, deductCredit } from "../services/walletService
 import { useAuth } from "../hooks/useAuth";
 import { logoutUser } from "../services/authService";
 import { createMatch } from "../services/matchService";
+import { seedAllUsers, seedUserProfile } from "../services/seedService";
 
 export default function TestDashboard() {
   const navigate = useNavigate();
@@ -75,6 +76,48 @@ export default function TestDashboard() {
     }
   };
 
+  const handleSeedProfile = async () => {
+    try {
+      if (!user) {
+        alert("Kullanici bulunamadi. Lutfen tekrar giris yapin.");
+        return;
+      }
+      const confirmSeed = window.confirm(
+        "Profil verileri (rank/level/stats/achievements) olusturulsun mu?"
+      );
+      if (!confirmSeed) {
+        return;
+      }
+
+      await seedUserProfile(user.uid);
+      alert(`✅ Profil alanlari olusturuldu! (UID: ${user.uid})`);
+    } catch (err) {
+      alert("Seed basarisiz: " + err.message);
+    }
+  };
+
+  const handleSeedAllUsers = async () => {
+    try {
+      if (!user) {
+        alert("Kullanici bulunamadi. Lutfen tekrar giris yapin.");
+        return;
+      }
+      const confirmSeed = window.confirm(
+        "Tum kullanicilara varsayilan profil alanlari eklensin mi?"
+      );
+      if (!confirmSeed) {
+        return;
+      }
+
+      const result = await seedAllUsers();
+      alert(
+        `✅ Toplu seed tamamlandi! Guncellenen: ${result.updatedCount}, Atlanan: ${result.skippedCount}, Toplam: ${result.total}`
+      );
+    } catch (err) {
+      alert("Toplu seed basarisiz: " + err.message);
+    }
+  };
+
   if (authLoading) return <div className="p-10 text-white">Yükleniyor...</div>;
 
   return (
@@ -135,6 +178,20 @@ export default function TestDashboard() {
             className="bg-purple-600 hover:bg-purple-500 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
           >
             🎮 Maç İlanı Aç
+          </button>
+
+          <button
+            onClick={handleSeedProfile}
+            className="bg-amber-600 hover:bg-amber-500 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
+          >
+            🧪 Profil Seed
+          </button>
+
+          <button
+            onClick={handleSeedAllUsers}
+            className="bg-amber-800 hover:bg-amber-700 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
+          >
+            🧪 Toplu Seed
           </button>
 
           <button
