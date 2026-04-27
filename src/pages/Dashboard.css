@@ -489,6 +489,10 @@
   color: var(--accent-pink);
 }
 
+.result-text.pending {
+  color: var(--text-muted);
+}
+
 .credit-cell {
   font-weight: 700;
   font-size: 15px;

@@ -46,7 +46,14 @@ export const addCredit = async (userId, amount) => {
 export const checkBalance = async (userId) => {
   const walletSnap = await getDoc(doc(db, "wallets", userId));
   if (walletSnap.exists()) {
-    return walletSnap.data().guncel_kredi;
+    const data = walletSnap.data();
+    return (
+      data.guncel_kredi ??
+      data.currentBalance ??
+      data.balance ??
+      data.bakiye ??
+      0
+    );
   }
   return 0;
 };

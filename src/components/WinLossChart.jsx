@@ -113,7 +113,6 @@ const WinLossChart = ({ wins = 0, losses = 0, title = 'Win/Loss Ratio' }) => {
         </div>
       </div>
 
-      {/* TODO: Replace hardcoded wins/losses with real backend data from Firebase */}
     </div>
   );
 };

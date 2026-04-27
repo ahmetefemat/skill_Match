@@ -51,8 +51,6 @@ const LinkedAccountCard = ({ account, onManage }) => {
       >
         {account.connected ? '⚙ Manage' : '+ Connect'}
       </button>
-
-      {/* TODO: Connect to real account linking from Firebase */}
     </div>
   );
 };

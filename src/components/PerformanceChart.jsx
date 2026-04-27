@@ -223,7 +223,6 @@ const PerformanceChart = ({
         </div>
       </div>
 
-      {/* TODO: Replace chart data with real backend performance metrics from Firebase */}
     </div>
   );
 };

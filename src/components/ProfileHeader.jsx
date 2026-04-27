@@ -61,7 +61,6 @@ const ProfileHeader = ({ user, onEditClick }) => {
         </div>
       </div>
 
-      {/* TODO: Connect to real user data from Firebase auth + Firestore */}
     </div>
   );
 };

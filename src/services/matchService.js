@@ -7,6 +7,7 @@ import {
   doc, 
   runTransaction,
   getDocs,
+  getDoc,
   orderBy,
   limit
 } from "firebase/firestore";
@@ -241,6 +242,293 @@ export const getMatchHistory = async (userId) => {
     return matches;
   } catch (error) {
     console.error("Maç geçmişi sorgusu hatası:", error);
+    throw error;
+  }
+};
+
+export const getUserMatchHistory = async (userId, limitCount = 10) => {
+  try {
+    const [createdSnap, joinedSnap] = await Promise.all([
+      getDocs(
+        query(
+          collection(db, "matches"),
+          where("olusturan_id", "==", userId),
+          orderBy("guncellenme_tarihi", "desc"),
+          limit(limitCount)
+        )
+      ),
+      getDocs(
+        query(
+          collection(db, "matches"),
+          where("katilan_id", "==", userId),
+          orderBy("guncellenme_tarihi", "desc"),
+          limit(limitCount)
+        )
+      ),
+    ]);
+
+    const matchesMap = new Map();
+
+    createdSnap.forEach((docSnap) => {
+      matchesMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() });
+    });
+
+    joinedSnap.forEach((docSnap) => {
+      if (!matchesMap.has(docSnap.id)) {
+        matchesMap.set(docSnap.id, { id: docSnap.id, ...docSnap.data() });
+      }
+    });
+
+    return Array.from(matchesMap.values());
+  } catch (error) {
+    console.error("Kullanici mac gecmisi sorgusu hatasi:", error);
+    throw error;
+  }
+};
+
+export const getMatchById = async (matchId) => {
+  if (!matchId) {
+    return null;
+  }
+
+  const matchSnap = await getDoc(doc(db, "matches", matchId));
+  if (!matchSnap.exists()) {
+    return null;
+  }
+
+  return { id: matchSnap.id, ...matchSnap.data() };
+};
+
+// =====================================================
+// DURUM MAKİNESİ: GEÇERSIZ GEÇİŞLER ENGELLENİYOR
+// =====================================================
+
+/**
+ * Durum geçişi validasyonu
+ * Geçerli geçişler:
+ * - beklemede → oynanıyor (katılım olunca)
+ * - oynanıyor → tamamlandı (sonuç girilince)
+ * - oynanıyor → iptal (herhangi biri iptal edince)
+ * - beklemede → iptal (oluşturan iptal edebilir)
+ */
+export const isValidStatusTransition = (fromStatus, toStatus) => {
+  const validTransitions = {
+    "beklemede": ["oynanıyor", "iptal"],
+    "oynanıyor": ["tamamlandı", "iptal"],
+    "tamamlandı": [], // Final state
+    "iptal": []       // Final state
+  };
+
+  return validTransitions[fromStatus]?.includes(toStatus) || false;
+};
+
+/**
+ * Maç durumunu güncelle (durum makinesi kontrollü)
+ * Yalnızca geçerli geçişlere izin ver
+ */
+export const updateMatchStatus = async (matchId, newStatus) => {
+  try {
+    const result = await runTransaction(db, async (transaction) => {
+      // Mevcut durumu kontrol et
+      const matchRef = doc(db, "matches", matchId);
+      const matchSnap = await transaction.get(matchRef);
+
+      if (!matchSnap.exists()) {
+        throw new Error("Maç bulunamadı!");
+      }
+
+      const matchData = matchSnap.data();
+      const currentStatus = matchData.durum;
+
+      // Durum geçişinin geçerli olup olmadığını kontrol et
+      if (!isValidStatusTransition(currentStatus, newStatus)) {
+        throw new Error(
+          `Geçersiz durum geçişi: ${currentStatus} → ${newStatus}. ` +
+          `Maç durumundan ${newStatus} durumuna geçişe izin verilmiyor.`
+        );
+      }
+
+      // Durumu güncelle
+      transaction.update(matchRef, {
+        durum: newStatus,
+        guncellenme_tarihi: serverTimestamp()
+      });
+
+      return { success: true, previousStatus: currentStatus };
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Durum güncelleme hatası:", error.message);
+    throw error;
+  }
+};
+
+/**
+ * Maçı tamamla ve ödül dağıt
+ * - kazananId'yi kaydet
+ * - Kazananın cüzdanına toplam tutarı yatır
+ * - Transaction logları oluştur
+ */
+export const completeMatch = async (matchId, winnerId, creatorId, joinedId, entryFee) => {
+  try {
+    const result = await runTransaction(db, async (transaction) => {
+      // Adım 1: Match durumunu tamamlandı'ya çek
+      const matchRef = doc(db, "matches", matchId);
+      const matchSnap = await transaction.get(matchRef);
+
+      if (!matchSnap.exists()) {
+        throw new Error("Maç bulunamadı!");
+      }
+
+      const matchData = matchSnap.data();
+
+      // Durum kontrolü
+      if (matchData.durum !== "oynanıyor") {
+        throw new Error("Yalnızca oynanan maçlar tamamlanabilir!");
+      }
+
+      // Adım 2: Kazananı kaydet
+      transaction.update(matchRef, {
+        durum: "tamamlandı",
+        kazanan_id: winnerId,
+        guncellenme_tarihi: serverTimestamp()
+      });
+
+      // Adım 3: Kazananın cüzdanına toplam tutarı yatır
+      const winnerWalletRef = doc(db, "wallets", winnerId);
+      const winnerWalletSnap = await transaction.get(winnerWalletRef);
+
+      if (winnerWalletSnap.exists()) {
+        const currentBalance = winnerWalletSnap.data().guncel_kredi || 0;
+        const totalPrize = entryFee * 2; // İki oyuncunun bahisinin toplamı
+
+        transaction.update(winnerWalletRef, {
+          guncel_kredi: currentBalance + totalPrize,
+          son_islem_tarihi: serverTimestamp()
+        });
+
+        // Adım 4: Kazanç transaction log kaydı
+        const winTransactionRef = doc(collection(db, "transactions"));
+        transaction.set(winTransactionRef, {
+          user_id: winnerId,
+          tip: "gelir",
+          miktar: totalPrize,
+          aciklama: `Maç Kazanımı (${matchData.oyun_turu})`,
+          tarih: serverTimestamp(),
+          match_id: matchId
+        });
+      }
+
+      return { success: true, matchId };
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Maç tamamlama hatası:", error.message);
+    throw error;
+  }
+};
+
+/**
+ * Maçı iptal et ve iade akışını başlat
+ * - Geçerli durum: beklemede veya oynanıyor
+ * - Oluşturan oyuncuya: giris_ucreti geri yat
+ * - Katılan oyuncuya (varsa): giris_ucreti geri yat
+ * - Transaction logları oluştur
+ */
+export const cancelMatch = async (matchId) => {
+  try {
+    const result = await runTransaction(db, async (transaction) => {
+      // Adım 1: Match doküleri oku
+      const matchRef = doc(db, "matches", matchId);
+      const matchSnap = await transaction.get(matchRef);
+
+      if (!matchSnap.exists()) {
+        throw new Error("Maç bulunamadı!");
+      }
+
+      const matchData = matchSnap.data();
+
+      // Adım 2: Durum kontrolü (yalnızca beklemede ve oynanıyor durumunda iptal edilebilir)
+      if (!["beklemede", "oynanıyor"].includes(matchData.durum)) {
+        throw new Error(
+          `Durum: ${matchData.durum} olan maçlar iptal edilemez. ` +
+          `Yalnızca beklemede veya oynanıyor durumundaki maçlar iptal edilebilir.`
+        );
+      }
+
+      // Adım 3: İz bıraksam dönüştür
+      transaction.update(matchRef, {
+        durum: "iptal",
+        guncellenme_tarihi: serverTimestamp(),
+        iptal_nedeni: "Oyuncu tarafından iptal edildi",
+        iptal_tarihi: serverTimestamp()
+      });
+
+      const entryFee = matchData.giris_ucreti;
+
+      // Adım 4: Oluşturan oyuncuya iade yap
+      const creatorWalletRef = doc(db, "wallets", matchData.olusturan_id);
+      const creatorWalletSnap = await transaction.get(creatorWalletRef);
+
+      if (creatorWalletSnap.exists()) {
+        const creatorBalance = creatorWalletSnap.data().guncel_kredi || 0;
+        transaction.update(creatorWalletRef, {
+          guncel_kredi: creatorBalance + entryFee,
+          son_islem_tarihi: serverTimestamp()
+        });
+
+        // İade transaction log kaydı
+        const creatorRefundRef = doc(collection(db, "transactions"));
+        transaction.set(creatorRefundRef, {
+          user_id: matchData.olusturan_id,
+          tip: "iade",
+          miktar: entryFee,
+          aciklama: `Iptal edilen maçtan iade (${matchData.oyun_turu})`,
+          tarih: serverTimestamp(),
+          match_id: matchId
+        });
+      }
+
+      // Adım 5: Katılan oyuncuya (varsa) iade yap
+      if (matchData.katilan_id) {
+        const joinedWalletRef = doc(db, "wallets", matchData.katilan_id);
+        const joinedWalletSnap = await transaction.get(joinedWalletRef);
+
+        if (joinedWalletSnap.exists()) {
+          const joinedBalance = joinedWalletSnap.data().guncel_kredi || 0;
+          transaction.update(joinedWalletRef, {
+            guncel_kredi: joinedBalance + entryFee,
+            son_islem_tarihi: serverTimestamp()
+          });
+
+          // İade transaction log kaydı
+          const joinedRefundRef = doc(collection(db, "transactions"));
+          transaction.set(joinedRefundRef, {
+            user_id: matchData.katilan_id,
+            tip: "iade",
+            miktar: entryFee,
+            aciklama: `Iptal edilen maçtan iade (${matchData.oyun_turu})`,
+            tarih: serverTimestamp(),
+            match_id: matchId
+          });
+        }
+      }
+
+      return {
+        success: true,
+        matchId,
+        refunded: {
+          creator: entryFee,
+          joined: matchData.katilan_id ? entryFee : 0
+        }
+      };
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Maç iptal hatası:", error.message);
     throw error;
   }
 };

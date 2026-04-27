@@ -17,7 +17,26 @@ export const registerUser = async (email, password, username, riotId) => {
       riot_id: riotId,
       e_posta: email,
       rol: "user",
-      kayit_tarihi: serverTimestamp()
+      kayit_tarihi: serverTimestamp(),
+      rank: "Unranked",
+      level: 1,
+      tier: "Standard",
+      bio: "",
+      last_active: "Just now",
+      achievements: [],
+      stats: {
+        totalMatches: 0,
+        wins: 0,
+        losses: 0,
+        winRate: 0,
+        currentStreak: 0,
+        longestWinStreak: 0,
+        averagePerformanceRating: 0,
+        averageScore: 0,
+        averageKills: 0,
+        averageDeaths: 0,
+        averageAssists: 0,
+      },
     });
     console.log("Users koleksiyonuna yazıldı!");
 
