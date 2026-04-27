@@ -3,7 +3,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import { AuthProvider } from "./contexts/AuthProvider.jsx";
 import { useAuth } from "./hooks/useAuth.js";
 import Login from "./pages/Login.jsx";
-import WalletTest from "./pages/WalletTest.jsx";
 import Lobby from './pages/Lobby.jsx'; // SADECE BURASI DEĞİŞTİ: Yeni tasarım dosyamızı çağırdık
 
 // --- GÜVENLİK DUVARI ---
@@ -37,15 +36,6 @@ function AppContent() {
           element={user ? <Navigate to="/lobby" /> : <Login />} 
         />
         
-        {/* Cüzdan Test Sayfası */}
-        <Route 
-          path="/wallet-test" 
-          element={
-            <PrivateRoute>
-              <WalletTest />
-            </PrivateRoute>
-          } 
-        />
 
         {/* Hayrani'nin Lobisi - Artık Korumalı! */}
         <Route 

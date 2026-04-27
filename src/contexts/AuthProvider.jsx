@@ -11,8 +11,7 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      
+      setUser(currentUser);  
       if (currentUser) {
         try {
           const docRef = doc(db, "users", currentUser.uid);
