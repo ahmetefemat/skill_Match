@@ -388,7 +388,11 @@ export const completeMatch = async (matchId, winnerId, creatorId, joinedId, entr
         throw new Error("Yalnızca oynanan maçlar tamamlanabilir!");
       }
 
-      // Adım 2: Kazananı kaydet
+      // Read any wallets first (Firestore requires reads before writes in a transaction)
+      const winnerWalletRef = doc(db, "wallets", winnerId);
+      const winnerWalletSnap = await transaction.get(winnerWalletRef);
+
+      // Adım 2: Kazananı kaydet (yazmalar burada yapılacak, fakat önce tüm okuma işlemleri tamamlandı)
       transaction.update(matchRef, {
         durum: "tamamlandı",
         kazanan_id: winnerId,
@@ -396,9 +400,6 @@ export const completeMatch = async (matchId, winnerId, creatorId, joinedId, entr
       });
 
       // Adım 3: Kazananın cüzdanına toplam tutarı yatır
-      const winnerWalletRef = doc(db, "wallets", winnerId);
-      const winnerWalletSnap = await transaction.get(winnerWalletRef);
-
       if (winnerWalletSnap.exists()) {
         const currentBalance = winnerWalletSnap.data().guncel_kredi || 0;
         const totalPrize = entryFee * 2; // İki oyuncunun bahisinin toplamı
@@ -458,7 +459,19 @@ export const cancelMatch = async (matchId) => {
         );
       }
 
-      // Adım 3: İz bıraksam dönüştür
+      // BEFORE WRITES: Read wallets first (Firestore requires reads before writes in a transaction)
+      const entryFee = matchData.giris_ucreti;
+      const creatorWalletRef = doc(db, "wallets", matchData.olusturan_id);
+      const creatorWalletSnap = await transaction.get(creatorWalletRef);
+
+      let joinedWalletRef = null;
+      let joinedWalletSnap = null;
+      if (matchData.katilan_id) {
+        joinedWalletRef = doc(db, "wallets", matchData.katilan_id);
+        joinedWalletSnap = await transaction.get(joinedWalletRef);
+      }
+
+      // Adım 3: Durumu iptal olarak işaretle (yazmalar burada başlıyor)
       transaction.update(matchRef, {
         durum: "iptal",
         guncellenme_tarihi: serverTimestamp(),
@@ -466,12 +479,7 @@ export const cancelMatch = async (matchId) => {
         iptal_tarihi: serverTimestamp()
       });
 
-      const entryFee = matchData.giris_ucreti;
-
-      // Adım 4: Oluşturan oyuncuya iade yap
-      const creatorWalletRef = doc(db, "wallets", matchData.olusturan_id);
-      const creatorWalletSnap = await transaction.get(creatorWalletRef);
-
+      // Adım 4: Oluşturan oyuncuya iade yap (okuma tamamlandığı için güvenle yazılabilir)
       if (creatorWalletSnap.exists()) {
         const creatorBalance = creatorWalletSnap.data().guncel_kredi || 0;
         transaction.update(creatorWalletRef, {
@@ -492,28 +500,23 @@ export const cancelMatch = async (matchId) => {
       }
 
       // Adım 5: Katılan oyuncuya (varsa) iade yap
-      if (matchData.katilan_id) {
-        const joinedWalletRef = doc(db, "wallets", matchData.katilan_id);
-        const joinedWalletSnap = await transaction.get(joinedWalletRef);
+      if (joinedWalletSnap && joinedWalletSnap.exists()) {
+        const joinedBalance = joinedWalletSnap.data().guncel_kredi || 0;
+        transaction.update(joinedWalletRef, {
+          guncel_kredi: joinedBalance + entryFee,
+          son_islem_tarihi: serverTimestamp()
+        });
 
-        if (joinedWalletSnap.exists()) {
-          const joinedBalance = joinedWalletSnap.data().guncel_kredi || 0;
-          transaction.update(joinedWalletRef, {
-            guncel_kredi: joinedBalance + entryFee,
-            son_islem_tarihi: serverTimestamp()
-          });
-
-          // İade transaction log kaydı
-          const joinedRefundRef = doc(collection(db, "transactions"));
-          transaction.set(joinedRefundRef, {
-            user_id: matchData.katilan_id,
-            tip: "iade",
-            miktar: entryFee,
-            aciklama: `Iptal edilen maçtan iade (${matchData.oyun_turu})`,
-            tarih: serverTimestamp(),
-            match_id: matchId
-          });
-        }
+        // İade transaction log kaydı
+        const joinedRefundRef = doc(collection(db, "transactions"));
+        transaction.set(joinedRefundRef, {
+          user_id: matchData.katilan_id,
+          tip: "iade",
+          miktar: entryFee,
+          aciklama: `Iptal edilen maçtan iade (${matchData.oyun_turu})`,
+          tarih: serverTimestamp(),
+          match_id: matchId
+        });
       }
 
       return {
