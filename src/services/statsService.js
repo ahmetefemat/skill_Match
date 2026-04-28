@@ -39,6 +39,8 @@ const getMatchTimestamp = (match) => {
 };
 
 const getMatchResult = (match, userId) => {
+  const status = (match.durum || "").toLowerCase();
+  if (status === "iptal") return "cancelled";
   if (!match.kazanan_id) {
     return "pending";
   }
@@ -171,16 +173,30 @@ export const mapMatchesForTable = (matches = [], userId, opponentMap = {}) => {
 
     const result = getMatchResult(match, userId);
     const entryFee = typeof match.giris_ucreti === "number" ? match.giris_ucreti : 0;
-    const creditChange =
-      result === "won" ? entryFee : result === "lost" ? -entryFee : 0;
 
-    const rawStatus = match.durum || "";
+    // Eğer maç iptal edildiyse, ilgili kullanıcı(oluşturan veya katılan) için iade pozitif olarak gösterilsin
+    const rawStatusLower = (match.durum || '').toLowerCase();
+    let creditChange = 0;
+    if (rawStatusLower === 'iptal') {
+      // Eğer current user oluşturan veya katılan ise iade almış demektir
+      if (match.olusturan_id === userId || match.katilan_id === userId) {
+        creditChange = entryFee; // iade pozitif gösterilir
+      } else {
+        creditChange = 0;
+      }
+    } else {
+      creditChange = result === "won" ? entryFee : result === "lost" ? -entryFee : 0;
+    }
+
+    const rawStatus = (match.durum || "").toLowerCase();
     const status =
       rawStatus === "beklemede" || rawStatus === "oynanıyor"
         ? "pending"
-        : rawStatus === "tamamlandi"
+        : rawStatus === "tamamlandi" || rawStatus === "tamamlandı"
           ? "completed"
-          : rawStatus || "pending";
+          : rawStatus === "iptal"
+            ? "cancelled"
+            : rawStatus || "pending";
 
     return {
       id: match.id,

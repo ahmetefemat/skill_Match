@@ -20,6 +20,8 @@ const RecentMatchesTable = ({ matches = [], onMatchClick, onViewDetails }) => {
         return 'status-badge status-badge--pending';
       case 'completed':
         return 'status-badge status-badge--completed';
+      case 'cancelled':
+        return 'status-badge status-badge--cancelled';
       default:
         return 'status-badge status-badge--pending';
     }
@@ -70,25 +72,13 @@ const RecentMatchesTable = ({ matches = [], onMatchClick, onViewDetails }) => {
                   </td>
                   <td className="opponent-cell">{match.opponent}</td>
                   <td className="result-cell">
-                    <span
-                      className={`result-text ${
-                        match.result === 'won'
-                          ? 'won'
-                          : match.result === 'lost'
-                            ? 'lost'
-                            : 'pending'
-                      }`}
-                    >
-                      {match.result === 'won'
-                        ? '✓ Won'
-                        : match.result === 'lost'
-                          ? '✗ Lost'
-                          : '… Pending'}
+                    <span className={`result-text ${match.result === 'won' ? 'won' : match.result === 'lost' ? 'lost' : match.result === 'cancelled' ? 'cancelled' : 'pending'}`}>
+                      {match.result === 'won' ? '✓ Won' : match.result === 'lost' ? '✗ Lost' : match.result === 'cancelled' ? '⛔ Canceled' : '… Pending'}
                     </span>
                   </td>
                   <td className="credit-cell">
-                    <span className={`credit-amount ${match.creditChange >= 0 ? 'positive' : 'negative'}`}>
-                      {match.creditChange >= 0 ? '+' : ''}{match.creditChange}
+                    <span className={`credit-amount ${Number(match.creditChange) > 0 ? 'positive' : Number(match.creditChange) < 0 ? 'negative' : 'neutral'}`}>
+                      {Number(match.creditChange) > 0 ? `+${match.creditChange}` : match.creditChange}
                     </span>
                   </td>
                   <td className="date-cell">{match.date}</td>
