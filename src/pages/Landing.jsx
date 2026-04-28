@@ -1,128 +1,568 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { listenToActiveMatches, listenToPlayingMatches } from '../services/matchService';
-import { getUsersByIds } from '../services/userService';
-import { formatDateTime } from '../services/statsService';
+import { Link } from "react-router-dom";
+import "./Landing.css";
 
-const Landing = () => {
-	const [activeMatches, setActiveMatches] = useState([]);
-	const [playingMatches, setPlayingMatches] = useState([]);
-	const [userMap, setUserMap] = useState({});
-	const [loading, setLoading] = useState(true);
 
-	useEffect(() => {
-		let activeReady = false;
-		let playingReady = false;
+import lolImg from "../assets/landing/lol.png";
+import valorantImg from "../assets/landing/valorant.png";
+import cs2Img from "../assets/landing/cs2.png";
+import poppyImg from "../assets/landing/lol-poppy.png";
+import xIcon from "../assets/landing/x.png";
+import instagramIcon from "../assets/landing/instagram.png";
+import youtubeIcon from "../assets/landing/youtube.png";
+import logo from "../assets/logo.svg";
 
-		const unsubscribeActive = listenToActiveMatches((matches) => {
-			setActiveMatches(matches);
-			activeReady = true;
-			if (activeReady && playingReady) {
-				setLoading(false);
-			}
-		});
+const FeatureIcon = ({ type }) => {
+	const common = {
+		className: "landing-icon",
+		viewBox: "0 0 24 24",
+		fill: "none",
+		xmlns: "http://www.w3.org/2000/svg",
+	};
 
-		const unsubscribePlaying = listenToPlayingMatches((matches) => {
-			setPlayingMatches(matches);
-			playingReady = true;
-			if (activeReady && playingReady) {
-				setLoading(false);
-			}
-		});
-
-		return () => {
-			unsubscribeActive();
-			unsubscribePlaying();
-		};
-	}, []);
-
-	const userIds = useMemo(() => {
-		return [...activeMatches, ...playingMatches]
-			.flatMap((match) => [match.olusturan_id, match.katilan_id])
-			.filter(Boolean);
-	}, [activeMatches, playingMatches]);
-
-	useEffect(() => {
-		let isActive = true;
-
-		const loadUsers = async () => {
-			if (userIds.length === 0) {
-				if (isActive) {
-					setUserMap({});
-				}
-				return;
-			}
-
-			try {
-				const users = await getUsersByIds(userIds);
-				if (isActive) {
-					setUserMap(users);
-				}
-			} catch (error) {
-				console.error('Landing user map error:', error);
-			}
-		};
-
-		loadUsers();
-
-		return () => {
-			isActive = false;
-		};
-	}, [userIds]);
-
-	if (loading) {
-		return (
-			<div className="landing-loading">
-				<div className="loading-spinner">Loading matches...</div>
-			</div>
-		);
+	switch (type) {
+		case "trophy":
+			return (
+				<svg {...common}>
+					<path
+						d="M7 4h10v3c0 3.866-3.134 7-7 7H9c-3.314 0-6-2.686-6-6V7h4V4Z"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						opacity="0.95"
+					/>
+					<path
+						d="M17 7h4v1c0 2.209-1.791 4-4 4"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						opacity="0.95"
+					/>
+					<path
+						d="M3 7v1c0 2.209 1.791 4 4 4"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						opacity="0.95"
+					/>
+					<path
+						d="M12 14v4m0 0H8m4 0h4"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						strokeLinecap="round"
+					/>
+				</svg>
+			);
+		case "shield":
+			return (
+				<svg {...common}>
+					<path
+						d="M12 3.5 19 6.7v6.3c0 4.2-3 7.9-7 9.5-4-1.6-7-5.3-7-9.5V6.7L12 3.5Z"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						opacity="0.95"
+					/>
+					<path
+						d="m9.2 12 1.8 1.8 3.9-4.1"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						strokeLinecap="round"
+						strokeLinejoin="round"
+					/>
+				</svg>
+			);
+		case "bolt":
+			return (
+				<svg {...common}>
+					<path
+						d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						strokeLinejoin="round"
+						opacity="0.95"
+					/>
+				</svg>
+			);
+		case "chart":
+			return (
+				<svg {...common}>
+					<path
+						d="M4 19V5m0 14h16"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						strokeLinecap="round"
+					/>
+					<path
+						d="M7.5 15.5v-4m4 4v-7m4 7v-10"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						strokeLinecap="round"
+					/>
+				</svg>
+			);
+		case "users":
+			return (
+				<svg {...common}>
+					<path
+						d="M7.6 21v-1.2c0-1.75 1.42-3.18 3.18-3.18h2.44c1.76 0 3.18 1.43 3.18 3.18V21"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						strokeLinecap="round"
+					/>
+					<path
+						d="M12 13.8a3.3 3.3 0 1 0 0-6.6 3.3 3.3 0 0 0 0 6.6Z"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						opacity="0.95"
+					/>
+					<path
+						d="M18.7 21v-1c0-1.27-.77-2.37-1.88-2.84"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						strokeLinecap="round"
+						opacity="0.75"
+					/>
+					<path
+						d="M15.9 7.55a2.8 2.8 0 0 1 0 5.6"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						strokeLinecap="round"
+						opacity="0.75"
+					/>
+				</svg>
+			);
+		case "wallet":
+			return (
+				<svg {...common}>
+					<path
+						d="M6.5 7.8V6.6c0-1.25.3-1.85.77-2.26.47-.41 1.11-.54 2.35-.54h4.86c1.24 0 1.88.13 2.35.54.47.41.77 1.01.77 2.26v1.2"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						strokeLinecap="round"
+						opacity="0.9"
+					/>
+					<path
+						d="M4.8 8.6h14.4c.99 0 1.8.81 1.8 1.8v7.2c0 .99-.81 1.8-1.8 1.8H4.8c-.99 0-1.8-.81-1.8-1.8v-7.2c0-.99.81-1.8 1.8-1.8Z"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						opacity="0.95"
+						strokeLinejoin="round"
+					/>
+					<path
+						d="M15.7 12.2h5v4.6h-5c-1.27 0-2.3-1.03-2.3-2.3 0-1.27 1.03-2.3 2.3-2.3Z"
+						stroke="currentColor"
+						strokeWidth="1.8"
+						strokeLinejoin="round"
+					/>
+				</svg>
+			);
+		default:
+			return null;
 	}
-
-	return (
-		<div className="landing-wrapper">
-			<header className="landing-header">
-				<h1>SkillMatch</h1>
-				<p>Live matchmaking and active challenges.</p>
-			</header>
-
-			<section className="landing-section">
-				<h2>Active Matches</h2>
-				{activeMatches.length === 0 ? (
-					<p>No active matches right now.</p>
-				) : (
-					<ul>
-						{activeMatches.map((match) => (
-							<li key={match.id}>
-								<strong>{match.oyun_turu || 'Unknown'}</strong> | Entry: ₺{match.giris_ucreti}
-								{' | '}Target: {match.hedef || '-'} | Created by:{' '}
-								{userMap[match.olusturan_id]?.kullanici_adi || match.olusturan_id}
-								{' | '}Created: {formatDateTime(match.olusturulma_tarihi)}
-							</li>
-						))}
-					</ul>
-				)}
-			</section>
-
-			<section className="landing-section">
-				<h2>Live Matches</h2>
-				{playingMatches.length === 0 ? (
-					<p>No live matches right now.</p>
-				) : (
-					<ul>
-						{playingMatches.map((match) => (
-							<li key={match.id}>
-								<strong>{match.oyun_turu || 'Unknown'}</strong> | Entry: ₺{match.giris_ucreti}
-								{' | '}Created by:{' '}
-								{userMap[match.olusturan_id]?.kullanici_adi || match.olusturan_id}
-								{' | '}Joined by:{' '}
-								{userMap[match.katilan_id]?.kullanici_adi || 'Pending'}
-								{' | '}Updated: {formatDateTime(match.guncellenme_tarihi)}
-							</li>
-						))}
-					</ul>
-				)}
-			</section>
-		</div>
-	);
 };
 
-export default Landing;
+const games = [
+	{
+		key: "lol",
+		name: "League of Legends",
+		mode: "Ranked Solo/Duo  •  Esnek  •  Clash",
+		logo: "LEAGUE OF\nLEGENDS",
+		badge: "Aktif",
+		media: lolImg,
+		mediaPos: "25% 35%",
+		hue: "210deg",
+		accent: "#00f5d4",
+	},
+	{
+		key: "valorant",
+		name: "Valorant",
+		mode: "Rekabetçi  •  Derecesiz  •  Spike Rush",
+		logo: "VALORANT",
+		badge: "Aktif",
+		media: valorantImg,
+		mediaPos: "55% 35%",
+		hue: "330deg",
+		accent: "#00f5d4",
+	},
+	{
+		key: "cs2",
+		name: "Counter-Strike 2",
+		mode: "Premier  •  Rekabetçi  •  Faceit",
+		logo: "COUNTER\nSTRIKE 2",
+		badge: "Aktif",
+		media: cs2Img,
+		mediaPos: "75% 40%",
+		hue: "30deg",
+		accent: "#00f5d4",
+	},
+];
+
+const features = [
+	{
+		key: "skill",
+		title: "Yetenek Temelli",
+		desc: "Şans değil; doğru eşleşme ve yetenek kazandırır.",
+		icon: "trophy",
+		color: "cyan",
+	},
+	{
+		key: "secure",
+		title: "Güvenli & Adil",
+		desc: "Sonuçlar doğrulanır, ödüller güvence altındadır.",
+		icon: "shield",
+		color: "purple",
+	},
+	{
+		key: "fast",
+		title: "Hızlı & Kolay",
+		desc: "İddiayı oluştur, maçı oyna, sonucunu doğrula.",
+		icon: "bolt",
+		color: "cyan",
+	},
+	{
+		key: "analytics",
+		title: "İstatistik & Analiz",
+		desc: "Performansını takip et, kendini geliştir.",
+		icon: "chart",
+		color: "purple",
+	},
+];
+
+const stats = [
+	{ key: "u", value: "15K+", label: "Aktif Kullanıcı", icon: "users", color: "cyan" },
+	{ key: "m", value: "28K+", label: "Tamamlanan İddia", icon: "trophy", color: "purple" },
+	{ key: "r", value: "2.5M+", label: "Toplam Ödül", icon: "wallet", color: "cyan" },
+	{ key: "f", value: "%99.9", label: "Adil Oyun Oranı", icon: "shield", color: "purple" },
+];
+
+export default function Landing() {
+	return (
+		<div className="landing">
+			{/* Deep layered background */}
+			<div className="landing-bg" aria-hidden="true">
+				<div className="landing-orb landing-orb--a" />
+				<div className="landing-orb landing-orb--b" />
+				<div className="landing-orb landing-orb--c" />
+				<div className="landing-grid" />
+			</div>
+
+			{/* 1) Navbar */}
+			<header className="landing-navbar">
+				<div className="landing-container landing-navbarInner">
+					<div className="landing-brand">
+						<img
+							className="landing-brandMark"
+							src={logo}
+							alt="SkillMatch Logo"
+							style={{ width: 52, height: "auto", maxHeight: 52, objectFit: "contain" }}
+						/>
+					</div>
+
+					{/* TODO: Replace hash links with real routes (React Router) when ready */}
+					<nav className="landing-navLinks" aria-label="Primary">
+						<a className="landing-navLink" href="#games">
+							Nasıl Çalışır?
+						</a>
+						<a className="landing-navLink" href="#features">
+							Özellikler
+						</a>
+						<a className="landing-navLink" href="#footer">
+							Destek
+						</a>
+					</nav>
+
+					<div className="landing-navActions">
+						<Link className="landing-btn landing-btn--ghost" to="/">
+							Giriş Yap
+						</Link>
+						<Link className="landing-btn landing-btn--solid" to="/">
+							Hesap Oluştur
+						</Link>
+					</div>
+				</div>
+			</header>
+
+			<main>
+				{/* 2) Hero */}
+				<section className="landing-hero" id="top">
+					<div className="landing-container">
+						<div className="hero-shell">
+							<div className="hero-bg" aria-hidden="true">
+								<div className="hero-slice hero-slice--left" />
+								<div className="hero-slice hero-slice--right" />
+							</div>
+
+							<div className="hero-content">
+								<div className="hero-badge">
+									<span className="hero-badgeDot" />
+									<span>BET ON YOUR SKILL</span>
+								</div>
+
+								<h1 className="hero-title">
+									YETENEĞİNLE <span className="hero-gradient">KAZAN</span>
+								</h1>
+
+								<p className="hero-subtitle">
+									SkillMatch ile oyun becerini kanıtla, iddia oluştur, rakiplerini yen ve
+									ödülleri kazan!
+								</p>
+
+								<div className="hero-actions">
+									<Link className="landing-btn landing-btn--primary" to="/">
+										Hesap Oluştur <span aria-hidden="true">→</span>
+									</Link>
+									<Link className="landing-btn landing-btn--outline" to="/">
+										Giriş Yap <span aria-hidden="true">→</span>
+									</Link>
+								</div>
+
+								<div className="hero-trust">
+									<span className="hero-trustIcon" aria-hidden="true">
+										<FeatureIcon type="shield" />
+									</span>
+									<span>Güvenli</span>
+									<span className="hero-dot">•</span>
+									<span>Hızlı</span>
+									<span className="hero-dot">•</span>
+									<span>Adil</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+
+				{/* 3) Supported games */}
+				<section className="landing-section" id="games">
+					<div className="landing-container">
+						<div className="section-panel">
+							<p className="section-kicker">DESTEKLENEN OYUNLAR</p>
+							<h2 className="section-title">En Popüler Oyunlarda İddia Oluştur</h2>
+							<p className="section-subtitle">
+								Favori oyununu seç, yeteneğini göster ve kazanmaya başla.
+							</p>
+
+							<div className="games-grid">
+								{games.map((g) => (
+									<article
+										key={g.key}
+										className={`gameCard gameCard--${g.key}`}
+										style={{
+											"--media": `url(${g.media})`,
+											"--mediaPos": g.mediaPos,
+											"--mediaHue": g.hue,
+											"--accent": g.accent,
+										}}
+									>
+										<div className="gameCardMedia" aria-hidden="true" />
+
+										<div className="gameCardBody">
+											<div className="gameCardTop">
+												<h3 className="gameCardName">{g.name}</h3>
+												<span className="gameCardStatus">{g.badge}</span>
+											</div>
+											<p className="gameCardMode">{g.mode}</p>
+												{/* TODO: Replace with real wager creation flow */}
+											<button
+												className="gameCardAction"
+												type="button"
+												onClick={() => console.log(`Clicked: İddia Oluştur (${g.name})`)}
+											>
+												İddia Oluştur <span aria-hidden="true">→</span>
+											</button>
+										</div>
+									</article>
+								))}
+							</div>
+						</div>
+					</div>
+				</section>
+
+				{/* 4) Features */}
+				<section className="landing-section" id="features">
+					<div className="landing-container">
+						<div className="features-layout">
+							<div className="features-copy">
+								<h2 className="features-title">
+									Neden <span className="features-accent">SkillMatch</span>?
+								</h2>
+								<p className="features-desc">
+									Adil, güvenli ve rekabetçi bir ortamda yeteneğini sergile. İddialarını
+									oluştur, eşleş, kazan.
+								</p>
+							</div>
+
+							<div className="features-grid">
+								{features.map((f) => (
+									<article
+										key={f.key}
+										className={`featureCard featureCard--${f.color}`}
+									>
+										<div className="featureIcon" aria-hidden="true">
+											<FeatureIcon type={f.icon} />
+										</div>
+										<h3 className="featureTitle">{f.title}</h3>
+										<p className="featureDesc">{f.desc}</p>
+									</article>
+								))}
+							</div>
+						</div>
+					</div>
+				</section>
+
+				{/* 5) Stats strip */}
+				<section className="landing-section" id="stats">
+					<div className="landing-container">
+						<div className="stats-strip" role="list">
+							{stats.map((s) => (
+								<div key={s.key} className={`stat stat--${s.color}`} role="listitem">
+									<div className={`statIcon statIcon--${s.color}`} aria-hidden="true">
+										<FeatureIcon type={s.icon} />
+									</div>
+									<div className="statText">
+										<div className="statValue">{s.value}</div>
+										<div className="statLabel">{s.label}</div>
+									</div>
+								</div>
+							))}
+						</div>
+					</div>
+				</section>
+
+				{/* 6) Final CTA banner */}
+				<section className="landing-section">
+					<div className="landing-container">
+						<div className="cta-banner">
+							<div
+								className="cta-art"
+								aria-hidden="true"
+								style={{ "--ctaArt": `url(${poppyImg})` }}
+							/>
+							<div className="cta-copy">
+								<h2 className="cta-title">Hazır mısın? Yeteneğini gösterme zamanı!</h2>
+								<p className="cta-desc">Hemen hesap oluştur ve kazanmaya başla.</p>
+							</div>
+							<Link className="landing-btn landing-btn--primary cta-btn" to="/">
+								Hesap Oluştur <span aria-hidden="true">→</span>
+							</Link>
+						</div>
+					</div>
+				</section>
+			</main>
+
+			{/* 7) Footer */}
+			<footer className="landing-footer" id="footer">
+				<div className="landing-container">
+					<div className="footer-top">
+						<div className="footer-brand">
+							<div className="landing-brand footer-brandRow">
+								<img
+									className="landing-brandMark"
+									src={logo}
+									alt="SkillMatch Logo"
+									style={{ width: 26, height: "auto", maxHeight: 26, objectFit: "contain" }}
+								/>
+							</div>
+							<p className="footer-tagline">Bet on your skill. Win with performance.</p>
+							<div className="footer-social" aria-label="Social links">
+								{/* TODO: Replace with real SkillMatch social media links */}
+								<a
+									className="footer-socialBtn"
+									href="#"
+									target="_blank"
+									rel="noopener noreferrer"
+									onClick={() => console.log("Clicked: Social - X")}
+								>
+									<img className="footer-socialIcon" src={xIcon} alt="X" />
+								</a>
+								<a
+									className="footer-socialBtn"
+									href="#"
+									target="_blank"
+									rel="noopener noreferrer"
+									onClick={() => console.log("Clicked: Social - Instagram")}
+								>
+									<img className="footer-socialIcon" src={instagramIcon} alt="Instagram" />
+								</a>
+								<a
+									className="footer-socialBtn"
+									href="#"
+									target="_blank"
+									rel="noopener noreferrer"
+									onClick={() => console.log("Clicked: Social - YouTube")}
+								>
+									<img className="footer-socialIcon" src={youtubeIcon} alt="YouTube" />
+								</a>
+							</div>
+						</div>
+
+						<div className="footer-cols">
+							<div className="footer-col">
+								<h3>Platform</h3>
+								<a href="#games">Nasıl Çalışır?</a>
+								<a href="#features">Özellikler</a>
+								<a href="#stats">İstatistikler</a>
+							</div>
+							<div className="footer-col">
+								<h3>Oyunlar</h3>
+								<a href="#games">League of Legends</a>
+								<a href="#games">Valorant</a>
+								<a href="#games">Counter-Strike 2</a>
+							</div>
+							<div className="footer-col">
+								<h3>Destek</h3>
+								{/* TODO: Replace with real routes/pages */}
+								<a
+									href="#"
+									onClick={(e) => {
+										e.preventDefault();
+										console.log("Clicked: Yardım Merkezi");
+									}}
+								>
+									Yardım Merkezi
+								</a>
+								<a
+									href="#"
+									onClick={(e) => {
+										e.preventDefault();
+										console.log("Clicked: İletişim");
+									}}
+								>
+									İletişim
+								</a>
+								<a
+									href="#"
+									onClick={(e) => {
+										e.preventDefault();
+										console.log("Clicked: Kurallar");
+									}}
+								>
+									Kurallar
+								</a>
+							</div>
+							<div className="footer-col">
+								<h3>Yasal</h3>
+								{/* TODO: Replace with real routes/pages */}
+								<a
+									href="#"
+									onClick={(e) => {
+										e.preventDefault();
+										console.log("Clicked: Kullanım Şartları");
+									}}
+								>
+									Kullanım Şartları
+								</a>
+								<a
+									href="#"
+									onClick={(e) => {
+										e.preventDefault();
+										console.log("Clicked: Gizlilik Politikası");
+									}}
+								>
+									Gizlilik Politikası
+								</a>
+							</div>
+						</div>
+					</div>
+
+					<div className="footer-bottom">© 2024 SkillMatch. Tüm hakları saklıdır.</div>
+				</div>
+			</footer>
+		</div>
+	);
+}
