@@ -1,7 +1,8 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { checkBalance, getTransactionHistory } from '../services/walletService';
-import { getUserMatchHistory } from '../services/matchService';
+import React, { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import { checkBalance, getTransactionHistory } from "../services/walletService";
+import { getUserMatchHistory } from "../services/matchService";
 import {
   buildAchievements,
   buildLinkedAccounts,
@@ -9,20 +10,23 @@ import {
   getUserById,
   getUsersByIds,
   resolveStatsOverrides,
-} from '../services/userService';
+} from "../services/userService";
 import {
   buildMatchStats,
   buildWalletSummary,
   mapMatchesForTable,
   mapTransactions,
-} from '../services/statsService';
-import StatCard from '../components/StatCard';
-import ProfileHeader from '../components/ProfileHeader';
-import LinkedAccountCard from '../components/LinkedAccountCard';
-import TransactionItem from '../components/TransactionItem';
-import AchievementCard from '../components/AchievementCard';
-import RecentMatchesTable from '../components/RecentMatchesTable';
-import './Profile.css';
+} from "../services/statsService";
+import StatCard from "../components/StatCard";
+import ProfileHeader from "../components/ProfileHeader";
+import LinkedAccountCard from "../components/LinkedAccountCard";
+import TransactionItem from "../components/TransactionItem";
+import AchievementCard from "../components/AchievementCard";
+import RecentMatchesTable from "../components/RecentMatchesTable";
+import Footer from "../components/Footer.jsx";
+import AppNavbar from "../components/AppNavbar.jsx";
+import "./Landing.css";
+import "./Profile.css";
 
 /**
  * Profile Component
@@ -51,8 +55,14 @@ const Profile = () => {
   const [achievements, setAchievements] = useState([]);
 
   // State for user interactions
-  // TODO: Implement edit modal when backend is ready
-  // const [showEditModal, setShowEditModal] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editDraft, setEditDraft] = useState({
+    username: "",
+    riotId: "",
+    steamId: "",
+    avatarUrl: "",
+    bio: "",
+  });
 
   const loadProfileData = useCallback(async () => {
     if (!user) {
@@ -128,45 +138,114 @@ const Profile = () => {
 
   // TODO: Open profile edit modal/form when backend is ready
   const handleEditProfile = () => {
-    console.log('Edit Profile clicked');
-    alert('Edit Profile feature coming soon!\n\nThis will allow you to:\n- Update username\n- Change profile picture\n- Edit bio\n- Update game preferences');
+    console.log("Edit Profile clicked");
+    setEditDraft({
+      username: userProfile.username || "",
+      riotId: userProfile.riotId || "",
+      steamId: userProfile.steamId || "",
+      avatarUrl: userProfile.avatarUrl || "",
+      bio: userProfile.bio || "",
+    });
+    setIsEditOpen(true);
+  };
+
+  const handleCloseEdit = () => {
+    setIsEditOpen(false);
+  };
+
+  const handleSaveEdits = () => {
+    // TODO: Persist profile changes via Firebase/API (userService) then refresh profile state
+    const nextUsername = editDraft.username.trim();
+    const nextRiotId = editDraft.riotId.trim();
+    const nextSteamId = editDraft.steamId.trim();
+    const nextAvatarUrl = editDraft.avatarUrl.trim();
+    const nextBio = editDraft.bio.trim();
+
+    setUserProfile((prev) => ({
+      ...prev,
+      username: nextUsername || prev.username,
+      riotId: nextRiotId || null,
+      steamId: nextSteamId || null,
+      avatarUrl: nextAvatarUrl || null,
+      bio: nextBio,
+    }));
+
+    // Keep the Linked Accounts section consistent with the edited IDs.
+    // TODO: Replace with rebuildLinkedAccounts(updatedUserDataFromBackend)
+    setLinkedAccounts((prev) =>
+      prev.map((account) => {
+        if (account.id === "riot") {
+          return {
+            ...account,
+            username: nextRiotId || "Not connected",
+            connected: Boolean(nextRiotId),
+          };
+        }
+        if (account.id === "steam") {
+          return {
+            ...account,
+            username: nextSteamId || "Not connected",
+            connected: Boolean(nextSteamId),
+          };
+        }
+        return account;
+      })
+    );
+
+    setIsEditOpen(false);
+  };
+
+  // TODO: Connect logout to auth system
+  const handleLogout = () => {
+    console.log("Logout clicked");
+    alert("Çıkış işlemi backend/auth entegrasyonunda bağlanacak");
   };
 
   // TODO: Connect to wallet/payment flow
   const handleAddCredit = () => {
-    console.log('Add Credit clicked');
-    alert('Add Credit feature coming soon!\n\nThis will integrate with:\n- Stripe/Payment provider\n- Multiple payment methods\n- Transaction confirmation');
+    console.log("Add Credit clicked");
+    alert(
+      "Add Credit feature coming soon!\n\nThis will integrate with:\n- Stripe/Payment provider\n- Multiple payment methods\n- Transaction confirmation"
+    );
   };
 
   // TODO: Connect to Riot Games OAuth
   const handleConnectRiot = (account) => {
-    console.log('Connect Riot Games clicked');
-    alert(`${account.connected ? 'Manage' : 'Connect'} Riot Games account.\n\nThis will redirect to Riot OAuth for authentication.`);
+    console.log("Connect Riot Games clicked");
+    alert(
+      `${account.connected ? "Manage" : "Connect"} Riot Games account.\n\nThis will redirect to Riot OAuth for authentication.`
+    );
   };
 
   // TODO: Connect to Steam OAuth
   const handleConnectSteam = (account) => {
-    console.log('Connect Steam clicked');
-    alert(`${account.connected ? 'Manage' : 'Connect'} Steam account.\n\nThis will redirect to Steam OAuth for authentication.`);
+    console.log("Connect Steam clicked");
+    alert(
+      `${account.connected ? "Manage" : "Connect"} Steam account.\n\nThis will redirect to Steam OAuth for authentication.`
+    );
   };
 
   // TODO: Navigate to match details page
   const handleViewMatchDetails = (match) => {
-    console.log('View match details:', match);
-    alert(`Match Details:\nGame: ${match.game}\nOpponent: ${match.opponent}\nResult: ${match.result}\nK/D/A: ${match.kills}/${match.deaths}/${match.assists}`);
+    console.log("View match details:", match);
+    alert(
+      `Match Details:\nGame: ${match.game}\nOpponent: ${match.opponent}\nResult: ${match.result}\nK/D/A: ${match.kills}/${match.deaths}/${match.assists}`
+    );
   };
 
   // TODO: Navigate to wallet/transaction history page
   const handleViewAllTransactions = () => {
-    console.log('View all transactions clicked');
-    alert('Transaction history page coming soon!\n\nYou will see:\n- Complete transaction list\n- Filters by type\n- Export options');
+    console.log("View all transactions clicked");
+    alert(
+      "Transaction history page coming soon!\n\nYou will see:\n- Complete transaction list\n- Filters by type\n- Export options"
+    );
   };
 
   // Handler for linked account actions
   const handleManageAccount = (account) => {
-    if (account.platform === 'Riot Games') {
+    if (account.platform === "Riot Games") {
       handleConnectRiot(account);
-    } else if (account.platform === 'Steam') {
+    } else if (account.platform === "Steam") {
       handleConnectSteam(account);
     }
   };
@@ -178,18 +257,30 @@ const Profile = () => {
   if (authLoading || profileLoading) {
     return (
       <div className="profile-loading">
-        <div className="loading-spinner">Loading Profile...</div>
+        <div className="loading-spinner">SkillMatch Profil yükleniyor...</div>
       </div>
     );
   }
 
   return (
-    <div className="profile-wrapper">
-      {/* PROFILE HEADER */}
-      <ProfileHeader
-        user={userProfile}
-        onEditClick={handleEditProfile}
+    <div className="profile-wrapper profile-page">
+      {/* Background */}
+      <div className="profile-bg" aria-hidden="true">
+        <div className="profile-orb profile-orb--a" />
+        <div className="profile-orb profile-orb--b" />
+        <div className="profile-orb profile-orb--c" />
+      </div>
+
+      <AppNavbar
+        balance={userProfile.balance}
+        username={userProfile.username}
+        avatarUrl={userProfile.avatarUrl || user?.photoURL}
       />
+
+      <main className="profile-main">
+        <div className="landing-container">
+          {/* PROFILE HEADER */}
+          <ProfileHeader user={userProfile} onEditClick={handleEditProfile} onLogoutClick={handleLogout} />
 
       {/* STATISTICS OVERVIEW SECTION */}
       <section className="profile-section">
@@ -333,6 +424,105 @@ const Profile = () => {
       </section>
 
       {/* TODO: Connect all sections to real Firebase data */}
+        </div>
+      </main>
+
+      <Footer />
+
+      {/* EDIT PROFILE MODAL */}
+      {isEditOpen && (
+        <div
+          className="profile-modalOverlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Edit Profile"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) handleCloseEdit();
+          }}
+        >
+          <div className="profile-modalPanel">
+            <div className="profile-modalHeader">
+              <div>
+                <div className="profile-modalKicker">ACCOUNT</div>
+                <h3 className="profile-modalTitle">Profili Düzenle</h3>
+                <p className="profile-modalSubtitle">Değişiklikler şimdilik sadece bu ekranda güncellenir.</p>
+              </div>
+
+              <button
+                type="button"
+                className="profile-modalClose"
+                onClick={handleCloseEdit}
+                aria-label="Close"
+                title="Close"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="profile-formGrid">
+              <label className="profile-field">
+                <span className="profile-label">Username</span>
+                <input
+                  className="profile-input"
+                  value={editDraft.username}
+                  onChange={(e) => setEditDraft((prev) => ({ ...prev, username: e.target.value }))}
+                  placeholder="Username"
+                />
+              </label>
+
+              <label className="profile-field">
+                <span className="profile-label">Riot ID</span>
+                <input
+                  className="profile-input"
+                  value={editDraft.riotId}
+                  onChange={(e) => setEditDraft((prev) => ({ ...prev, riotId: e.target.value }))}
+                  placeholder="Example#TR1"
+                />
+              </label>
+
+              <label className="profile-field">
+                <span className="profile-label">Steam ID</span>
+                <input
+                  className="profile-input"
+                  value={editDraft.steamId}
+                  onChange={(e) => setEditDraft((prev) => ({ ...prev, steamId: e.target.value }))}
+                  placeholder="Steam ID"
+                />
+              </label>
+
+              <label className="profile-field">
+                <span className="profile-label">Avatar URL</span>
+                <input
+                  className="profile-input"
+                  value={editDraft.avatarUrl}
+                  onChange={(e) => setEditDraft((prev) => ({ ...prev, avatarUrl: e.target.value }))}
+                  placeholder="https://..."
+                />
+              </label>
+
+              <label className="profile-field profile-field--full">
+                <span className="profile-label">Bio</span>
+                <textarea
+                  className="profile-textarea"
+                  value={editDraft.bio}
+                  onChange={(e) => setEditDraft((prev) => ({ ...prev, bio: e.target.value }))}
+                  rows={4}
+                  placeholder="Kısa bir bio..."
+                />
+              </label>
+            </div>
+
+            <div className="profile-modalActions">
+              <button type="button" className="landing-btn landing-btn--ghost" onClick={handleCloseEdit}>
+                İptal
+              </button>
+              <button type="button" className="landing-btn landing-btn--primary" onClick={handleSaveEdits}>
+                Kaydet
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

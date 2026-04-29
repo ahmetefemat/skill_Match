@@ -1,30 +1,57 @@
 /* src/pages/Profile.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@600&display=swap');
 
-:root {
-  --surface: #0e1415;
-  --on-surface: #dee3e4;
-  --text-muted: #83948f;
-  --primary: #00f5d4;
-  --primary-dark: #00382f;
-  --secondary: #a855f7;
+/* Profile is styled to match Landing's visual language (gradient + neon + glass).
+   Keep variables scoped to avoid global overrides. */
+.profile-page {
+  --sm-bg: #050912;
+  --sm-panel: rgba(10, 15, 26, 0.6);
+  --sm-panel-2: rgba(12, 18, 32, 0.42);
+  --sm-cyan: #00f5d4;
+  --sm-purple: #a855f7;
+  --sm-text: rgba(255, 255, 255, 0.92);
+  --sm-muted: rgba(255, 255, 255, 0.66);
+  --sm-border: rgba(255, 255, 255, 0.08);
+  --sm-border-strong: rgba(255, 255, 255, 0.16);
+
+  --surface: var(--sm-bg);
+  --on-surface: var(--sm-text);
+  --text-muted: var(--sm-muted);
+  --primary: var(--sm-cyan);
+  --primary-dark: rgba(4, 10, 18, 0.95);
+  --secondary: var(--sm-purple);
   --accent-pink: #ec4899;
   --accent-emerald: #4ade80;
-  --card-border: rgba(0, 245, 212, 0.15);
-  --card-hover: rgba(0, 245, 212, 0.4);
-  --card-bg: rgba(255, 255, 255, 0.015);
-  --card-bg-hover: rgba(255, 255, 255, 0.025);
+  --card-border: var(--sm-border);
+  --card-bg: rgba(10, 15, 26, 0.58);
+  --card-bg-hover: rgba(10, 15, 26, 0.72);
+
+  min-height: 100vh;
+  color: var(--sm-text);
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(0, 245, 212, 0.20), transparent 60%),
+    radial-gradient(900px 550px at 85% 10%, rgba(168, 85, 247, 0.18), transparent 58%),
+    radial-gradient(900px 700px at 50% 120%, rgba(0, 245, 212, 0.12), transparent 55%),
+    linear-gradient(180deg, #050812 0%, #050912 55%, #04070f 100%);
+  position: relative;
+  overflow-x: hidden;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans",
+    "Helvetica Neue", sans-serif;
 }
 
 /* --- LOADING STATE --- */
 .profile-loading {
   min-height: 100vh;
-  background-color: var(--surface);
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(0, 245, 212, 0.20), transparent 60%),
+    radial-gradient(900px 550px at 85% 10%, rgba(168, 85, 247, 0.18), transparent 58%),
+    linear-gradient(180deg, #050812 0%, #050912 55%, #04070f 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--on-surface);
-  font-family: 'Inter', sans-serif;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans",
+    "Helvetica Neue", sans-serif;
 }
 
 .loading-spinner {
@@ -40,35 +67,159 @@
 
 /* --- MAIN WRAPPER --- */
 .profile-wrapper {
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
-  background: linear-gradient(135deg, #0e1415 0%, #0a1820 100%);
-  color: var(--on-surface);
-  font-family: 'Inter', sans-serif;
-  padding: 40px;
   position: relative;
 }
 
-.profile-wrapper::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: 
-    radial-gradient(circle at 20% 50%, rgba(0, 245, 212, 0.03) 0%, transparent 50%),
-    radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.03) 0%, transparent 50%);
+.profile-main {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  padding: 26px 0 54px;
+}
+
+/* Background layers */
+.profile-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
   pointer-events: none;
-  z-index: -1;
+}
+
+.profile-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(40px);
+  opacity: 0.9;
+}
+
+.profile-orb--a {
+  width: 520px;
+  height: 520px;
+  left: -180px;
+  top: -160px;
+  background: radial-gradient(circle at 30% 30%, rgba(0, 245, 212, 0.55), transparent 60%);
+}
+
+.profile-orb--b {
+  width: 520px;
+  height: 520px;
+  right: -200px;
+  top: -140px;
+  background: radial-gradient(circle at 55% 35%, rgba(168, 85, 247, 0.55), transparent 62%);
+}
+
+.profile-orb--c {
+  width: 560px;
+  height: 560px;
+  left: 40%;
+  bottom: -260px;
+  background: radial-gradient(circle at 45% 45%, rgba(0, 245, 212, 0.30), transparent 62%);
+}
+
+/* Top nav */
+.profile-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 14px 0;
+  background: rgba(5, 9, 18, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.profile-navbarInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.profile-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-brandMark {
+  filter: drop-shadow(0 0 14px rgba(0, 245, 212, 0.25));
+}
+
+.profile-brandText {
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.profile-navLinks {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.profile-navLink {
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+
+.profile-navLink:hover {
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 14px rgba(0, 245, 212, 0.24);
+}
+
+.profile-navLink.isActive {
+  color: rgba(255, 255, 255, 0.96);
+  text-shadow: 0 0 16px rgba(0, 245, 212, 0.30);
+}
+
+.profile-navActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.profile-balancePill {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-balanceLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.70);
+  text-transform: uppercase;
+}
+
+.profile-balanceValue {
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.94);
+}
+
+@media (max-width: 980px) {
+  .profile-navLinks {
+    display: none;
+  }
 }
 
 /* --- PROFILE HEADER CARD --- */
 .profile-header-card {
-  background: var(--card-bg);
+  background: linear-gradient(135deg, rgba(10, 15, 26, 0.76), rgba(10, 15, 26, 0.50));
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--card-border);
-  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 22px;
   padding: 32px;
   margin-bottom: 48px;
   display: grid;
@@ -76,6 +227,7 @@
   gap: 32px;
   align-items: start;
   transition: all 0.3s ease;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.32);
 }
 
 .profile-header-card:hover {
@@ -107,6 +259,19 @@
   color: var(--primary);
   box-shadow: 0 0 30px rgba(0, 245, 212, 0.2);
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.profile-avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-avatarInitial {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .verified-badge {
@@ -137,7 +302,7 @@
   margin: 0;
   font-size: 32px;
   font-weight: 700;
-  color: var(--on-surface);
+  color: rgba(255, 255, 255, 0.96);
 }
 
 .profile-rank {
@@ -146,22 +311,22 @@
   align-items: center;
   gap: 12px;
   font-size: 14px;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.66);
 }
 
 .rank-badge {
   display: inline-block;
   background: linear-gradient(135deg, rgba(168, 85, 247, 0.2), rgba(0, 245, 212, 0.2));
-  border: 1px solid rgba(0, 245, 212, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   padding: 4px 12px;
   border-radius: 6px;
   font-weight: 700;
-  color: var(--primary);
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .rank-level {
   font-weight: 600;
-  color: var(--on-surface);
+  color: rgba(255, 255, 255, 0.92);
 }
 
 .profile-ids {
@@ -180,7 +345,7 @@
 .id-label {
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.62);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -188,14 +353,14 @@
 .id-value {
   font-size: 13px;
   font-weight: 600;
-  color: var(--on-surface);
+  color: rgba(255, 255, 255, 0.92);
   font-family: 'Courier New', monospace;
 }
 
 .profile-bio {
   margin: 4px 0 0 0;
   font-size: 13px;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.66);
   font-style: italic;
   max-width: 400px;
 }
@@ -204,9 +369,9 @@
   display: flex;
   gap: 20px;
   padding-top: 12px;
-  border-top: 1px solid rgba(131, 148, 143, 0.1);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
   font-size: 12px;
-  color: var(--text-muted);
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .meta-item {
@@ -406,7 +571,7 @@
 }
 
 .linked-account-card.account-disconnected {
-  border-color: rgba(131, 148, 143, 0.2);
+  border-color: rgba(255, 255, 255, 0.10);
   opacity: 0.8;
 }
 
@@ -654,7 +819,7 @@
   padding: 12px;
   border-radius: 8px;
   transition: all 0.2s ease;
-  border-bottom: 1px solid rgba(131, 148, 143, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .transaction-item:last-child {
@@ -788,7 +953,7 @@
 }
 
 .achievement-card.achievement-common {
-  border-color: rgba(131, 148, 143, 0.3);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .achievement-card.achievement-rare {
@@ -901,3 +1066,178 @@
 .profile-section:nth-child(4) { animation-delay: 0.3s; }
 .profile-section:nth-child(5) { animation-delay: 0.4s; }
 .profile-section:nth-child(6) { animation-delay: 0.5s; }
+
+/* --- EDIT PROFILE MODAL --- */
+.profile-modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.profile-modalPanel {
+  width: min(720px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  border-radius: 22px;
+  background: linear-gradient(135deg, rgba(10, 15, 26, 0.86), rgba(10, 15, 26, 0.62));
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  padding: 22px;
+}
+
+.profile-modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-modalKicker {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.profile-modalTitle {
+  margin: 8px 0 0 0;
+  font-size: 22px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.96);
+}
+
+.profile-modalSubtitle {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.66);
+  max-width: 52ch;
+}
+
+.profile-modalClose {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.86);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.profile-modalClose:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.profile-formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding-top: 16px;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-field--full {
+  grid-column: 1 / -1;
+}
+
+.profile-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.profile-input,
+.profile-textarea {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 12px;
+  padding: 12px 12px;
+  color: rgba(255, 255, 255, 0.92);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.profile-textarea {
+  resize: vertical;
+  min-height: 104px;
+}
+
+.profile-input::placeholder,
+.profile-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.44);
+}
+
+.profile-input:focus,
+.profile-textarea:focus {
+  border-color: rgba(0, 245, 212, 0.40);
+  box-shadow: 0 0 0 4px rgba(0, 245, 212, 0.10);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.profile-modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 18px;
+}
+
+/* Landing buttons are reused; these are small profile-specific tweaks. */
+.profile-actionBtn {
+  width: 100%;
+  justify-content: center;
+}
+
+.profile-actionBtn--danger {
+  border-color: rgba(236, 72, 153, 0.35) !important;
+  color: rgba(255, 255, 255, 0.92) !important;
+}
+
+.profile-actionBtn--danger:hover {
+  border-color: rgba(236, 72, 153, 0.55) !important;
+  box-shadow: 0 12px 30px rgba(236, 72, 153, 0.12);
+}
+
+.empty-state {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+@media (max-width: 640px) {
+  .profile-modalOverlay {
+    padding: 16px;
+  }
+
+  .profile-modalPanel {
+    padding: 18px;
+  }
+
+  .profile-formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-modalActions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+}
