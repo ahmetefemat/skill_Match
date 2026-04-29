@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "firebase:emulator": "firebase emulators:start",
+    "test:firestore-rules": "node firestore-rules-test.cjs"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.2.2",

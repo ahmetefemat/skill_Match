@@ -20,7 +20,7 @@ const PrivateRoute = ({ children }) => {
     </div>
   );
 
-  return user ? children : <Navigate to="/" />;
+  return user ? children : <Navigate to="/login" />;
 };
 
 function AppContent() {
@@ -35,14 +35,15 @@ function AppContent() {
   return (
     <Router>
       <Routes>
-        {/* Giriş yapılmışsa direkt lobiye veya cüzdana at */}
-        <Route 
-          path="/" 
-          element={user ? <Navigate to="/lobby" /> : <Login />} 
-        />
-
-        {/* Landing - Public page */}
+        {/* Root: Landing page is the site's main entry */}
+        <Route path="/" element={<Landing />} />
         <Route path="/landing" element={<Landing />} />
+
+        {/* Login moved to explicit path */}
+        <Route
+          path="/login"
+          element={user ? <Navigate to="/lobby" /> : <Login />}
+        />
 
         {/* Hayrani'nin Lobisi - Artık Korumalı! */}
         <Route 
@@ -64,16 +65,6 @@ function AppContent() {
           } 
         />
 
-        {/* Test Dashboard - Korumalı sayfa */}
-        <Route
-          path="/testing"
-          element={
-            <PrivateRoute>
-              <TestDashboard />
-            </PrivateRoute>
-          }
-        />
-
         {/* Profile - Korumalı sayfa */}
         <Route 
           path="/profile" 
@@ -92,6 +83,16 @@ function AppContent() {
               <Match />
             </PrivateRoute>
           }
+        />
+
+        {/* Test Dashboard - Korumalı sayfa */}
+        <Route 
+          path="/test-dashboard" 
+          element={
+            <PrivateRoute>
+              <TestDashboard />
+            </PrivateRoute>
+          } 
         />
 
         {/* Yanlış yolları ana sayfaya yönlendir */}

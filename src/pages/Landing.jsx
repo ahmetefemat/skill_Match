@@ -268,10 +268,10 @@ export default function Landing() {
 					</nav>
 
 					<div className="landing-navActions">
-						<Link className="landing-btn landing-btn--ghost" to="/">
+						<Link className="landing-btn landing-btn--ghost" to="/login">
 							Giriş Yap
 						</Link>
-						<Link className="landing-btn landing-btn--solid" to="/">
+						<Link className="landing-btn landing-btn--solid" to="/login">
 							Hesap Oluştur
 						</Link>
 					</div>
@@ -304,10 +304,10 @@ export default function Landing() {
 								</p>
 
 								<div className="hero-actions">
-									<Link className="landing-btn landing-btn--primary" to="/">
+									<Link className="landing-btn landing-btn--primary" to="/login">
 										Hesap Oluştur <span aria-hidden="true">→</span>
 									</Link>
-									<Link className="landing-btn landing-btn--outline" to="/">
+									<Link className="landing-btn landing-btn--outline" to="/login">
 										Giriş Yap <span aria-hidden="true">→</span>
 									</Link>
 								</div>
@@ -437,7 +437,7 @@ export default function Landing() {
 								<h2 className="cta-title">Hazır mısın? Yeteneğini gösterme zamanı!</h2>
 								<p className="cta-desc">Hemen hesap oluştur ve kazanmaya başla.</p>
 							</div>
-							<Link className="landing-btn landing-btn--primary cta-btn" to="/">
+							<Link className="landing-btn landing-btn--primary cta-btn" to="/login">
 								Hesap Oluştur <span aria-hidden="true">→</span>
 							</Link>
 						</div>
