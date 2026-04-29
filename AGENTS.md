@@ -18,7 +18,6 @@ Guidance for AI coding agents working in this repository. Keep changes small, al
 ## Current Routing Reality
 Routes currently wired in `src/App.jsx`:
 - `/` -> login screen (or redirect to `/lobby` when authenticated)
-- `/testing` -> test dashboard (protected page for testing all backend features)
 - `/lobby` -> live match lobby (protected page)
 - `*` -> redirects to `/`
 
@@ -31,7 +30,6 @@ Routes currently wired in `src/App.jsx`:
 - Match logic: `src/services/matchService.js`
 - UI pages in use:
   - `src/pages/Login.jsx` - login/register
-  - `src/pages/TestDashboard.jsx` - comprehensive backend testing (wallet, matches, etc.)
   - `src/pages/LiveLobby.jsx` - live match lobby
 
 ## Code Conventions In This Repo
@@ -43,7 +41,6 @@ Routes currently wired in `src/App.jsx`:
 ## Known Baseline Issues
 All baseline lint errors have been resolved:
 - ✅ `react-refresh/only-export-components` - Fixed by splitting `AuthContext.jsx` → `authContext.js` + `AuthProvider.jsx`
-- ✅ Hook/effect warnings in `WalletTest.jsx` - File removed, features moved to `TestDashboard.jsx`
 - ✅ `no-useless-catch` in `authService.js` - Fixed
 - ✅ `matchData` undefined and duplicate update path in `matchService.js` - Fixed with defensive checks
 

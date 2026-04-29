@@ -1,0 +1,97 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function: Check if request is from authenticated user
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function: Get the authenticated user's UID
+    function getUserId() {
+      return request.auth.uid;
+    }
+
+    // Helper function: Check if user is accessing their own document
+    function isOwnDocument(userId) {
+      return getUserId() == userId;
+    }
+
+    // ====== USERS COLLECTION ======
+    // Authenticated users can read public profile info
+    // Users can only write/update their own profile
+    match /users/{userId} {
+      // Anyone authenticated can read user profiles (needed for match viewing)
+      allow read: if isAuthenticated();
+      
+      // Users can only create/update their own profile
+      allow create: if isAuthenticated() && isOwnDocument(userId) && 
+                       request.resource.data.user_id == userId &&
+                       request.resource.data.rol == "user";
+      
+      allow update: if isAuthenticated() && isOwnDocument(userId) &&
+                       // Prevent role elevation
+                       (request.resource.data.rol == resource.data.rol || request.resource.data.rol == "user");
+      
+      allow delete: if false; // Prevent user document deletion
+    }
+
+    // ====== WALLETS COLLECTION ======
+    // Users can only read/write their own wallet
+    // Direct wallet modifications should not happen from client (use transactions)
+    match /wallets/{userId} {
+      // Users can only read their own wallet
+      allow read: if isAuthenticated() && isOwnDocument(userId);
+      
+      // Wallet creation only during user registration via backend
+      allow create: if isAuthenticated() && isOwnDocument(userId) &&
+                       request.resource.data.user_id == userId &&
+                       request.resource.data.guncel_kredi == 0;
+      
+      // Users cannot directly update wallet (only via transactions)
+      allow update: if false;
+      
+      allow delete: if false; // Prevent wallet deletion
+    }
+
+    // ====== MATCHES COLLECTION ======
+    // All authenticated users can read all matches
+    // Match creation/updates should only happen via backend transaction
+    match /matches/{matchId} {
+      // All authenticated users can read matches
+      allow read: if isAuthenticated();
+      
+      // Match creation only via backend
+      allow create: if false;
+      
+      // Match updates only via backend
+      allow update: if false;
+      
+      // Prevent match deletion from client
+      allow delete: if false;
+    }
+
+    // ====== TRANSACTIONS COLLECTION ======
+    // Users can only read their own transactions
+    // All transaction creation happens via backend
+    match /transactions/{transactionId} {
+      // Users can only read their own transactions
+      allow read: if isAuthenticated() && 
+                     resource.data.user_id == getUserId();
+      
+      // Transaction creation only via backend
+      allow create: if false;
+      
+      // Prevent transaction updates/deletes
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ====== DEFAULT DENY ======
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

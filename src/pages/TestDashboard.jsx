@@ -1,353 +1,238 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { auth } from "../services/firebase";
-import { addCredit, checkBalance, deductCredit } from "../services/walletService";
+﻿import React, { useState, useEffect } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { logoutUser } from "../services/authService";
-import { createMatch, getUserMatchHistory, updateMatchStatus, completeMatch, cancelMatch, joinMatch } from "../services/matchService";
-import { seedAllUsers, seedUserProfile } from "../services/seedService";
+import { addCredit, deductCredit, checkBalance } from "../services/walletService";
+import { createMatch, updateMatchStatus, completeMatch } from "../services/matchService";
+import "./TestDashboard.css";
 
 export default function TestDashboard() {
-  const navigate = useNavigate();
-  const { userData, loading: authLoading } = useAuth();
-  const [currentBalance, setCurrentBalance] = useState(0);
-  const user = auth.currentUser;
+  const { user } = useAuth();
+  const [balance, setBalance] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messageType, setMessageType] = useState("");
 
-  useEffect(() => {
-    const fetchBalance = async () => {
-      if (user) {
-        const bakiye = await checkBalance(user.uid);
-        setCurrentBalance(bakiye);
-      }
-    };
-    fetchBalance();
-  }, [user]);
+  const [creditAmount, setCreditAmount] = useState("");
+  const [deductAmount, setDeductAmount] = useState("");
+  const [gameType, setGameType] = useState("CS2");
+  const [matchAmount, setMatchAmount] = useState("");
+  const [targetGoal, setTargetGoal] = useState("");
+  const [createdMatchId, setCreatedMatchId] = useState("");
+  const [matchIdForStatus, setMatchIdForStatus] = useState("");
+  const [newStatus, setNewStatus] = useState("oynanıyor");
+  const [matchIdForComplete, setMatchIdForComplete] = useState("");
+  const [winnerUserId, setWinnerUserId] = useState("");
 
-  const refreshBalance = async () => {
-    if (user) {
-      const bakiye = await checkBalance(user.uid);
-      setCurrentBalance(bakiye);
-    }
-  };
-
-  // YÜKLEME İŞLEMİ
-  const handleUpdate = async () => {
-    try {
-      const miktar = prompt("Yüklemek istediğiniz kredi miktarını girin:");
-      if (!miktar || isNaN(miktar) || Number(miktar) <= 0) {
-        return alert("Lütfen geçerli bir sayı girin.");
-      }
-      await addCredit(user.uid, Number(miktar));
-      alert(`✅ ${miktar} kredi başarıyla yüklendi!`);
-      refreshBalance();
-    } catch (err) {
-      alert("Hata oluştu: " + err.message);
-    }
-  };
-
-  // HARCAMA / BAKİYE DÜŞME İŞLEMİ
-  const handleDeduct = async () => {
-    try {
-      const miktar = prompt("Harcamak (düşmek) istediğiniz miktarı girin:");
-      if (!miktar || isNaN(miktar) || Number(miktar) <= 0) {
-        return alert("Lütfen geçerli bir sayı girin.");
-      }
-
-      await deductCredit(user.uid, Number(miktar), "Test Harcaması (Manuel)");
-      alert(`✅ ${miktar} ₺ cüzdanınızdan başarıyla düşüldü!`);
-      refreshBalance();
-    } catch (err) {
-      alert("İşlem Başarısız: " + err.message);
-    }
-  };
-
-  // MAÇ AÇMA TEST İŞLEMİ
-  const handleCreateMatch = async () => {
-    try {
-      const miktar = prompt("Kaç TL'lik maç açmak istiyorsun?");
-      if (!miktar || isNaN(miktar) || Number(miktar) <= 0) return;
-
-      await createMatch(user.uid, "Valorant", Number(miktar));
-
-      alert(`✅ ${miktar} ₺ değerinde Valorant maçı başarıyla açıldı!`);
-      refreshBalance();
-    } catch (err) {
-      alert("Maç Açılamadı: " + err.message);
-    }
-  };
-
-  const handleSeedProfile = async () => {
-    try {
-      if (!user) {
-        alert("Kullanici bulunamadi. Lutfen tekrar giris yapin.");
-        return;
-      }
-      const confirmSeed = window.confirm(
-        "Profil verileri (rank/level/stats/achievements) olusturulsun mu?"
-      );
-      if (!confirmSeed) {
-        return;
-      }
-
-      await seedUserProfile(user.uid);
-      alert(`✅ Profil alanlari olusturuldu! (UID: ${user.uid})`);
-    } catch (err) {
-      alert("Seed basarisiz: " + err.message);
-    }
-  };
-
-  const handleSeedAllUsers = async () => {
-    try {
-      if (!user) {
-        alert("Kullanici bulunamadi. Lutfen tekrar giris yapin.");
-        return;
-      }
-      const confirmSeed = window.confirm(
-        "Tum kullanicilara varsayilan profil alanlari eklensin mi?"
-      );
-      if (!confirmSeed) {
-        return;
-      }
-
-      const result = await seedAllUsers();
-      alert(
-        `✅ Toplu seed tamamlandi! Guncellenen: ${result.updatedCount}, Atlanan: ${result.skippedCount}, Toplam: ${result.total}`
-      );
-    } catch (err) {
-      alert("Toplu seed basarisiz: " + err.message);
-    }
-  };
-
-  // MAÇ DURUM MAKİNESİ TEST PANELİ
-  const [matches, setMatches] = useState([]);
-  const [loadingMatches, setLoadingMatches] = useState(false);
-
-  const loadMatches = async () => {
+  const loadBalance = async () => {
     if (!user) return;
     try {
-      setLoadingMatches(true);
-      const items = await getUserMatchHistory(user.uid, 20);
-      setMatches(items || []);
-    } catch (err) {
-      alert("Maçları yüklerken hata: " + err.message);
+      const currentBalance = await checkBalance(user.uid);
+      setBalance(currentBalance);
+      showMessage(`Bakiye yüklendi: ${currentBalance}`, "success");
+    } catch (error) {
+      showMessage(`Bakiye yükleme hatası: ${error.message}`, "error");
+    }
+  };
+
+  useEffect(() => {
+    loadBalance();
+  }, [user]);
+
+  const showMessage = (msg, type = "info") => {
+    setMessage(msg);
+    setMessageType(type);
+    setTimeout(() => setMessage(""), 5000);
+  };
+
+  const handleAddCredit = async (e) => {
+    e.preventDefault();
+    if (!creditAmount || isNaN(creditAmount) || creditAmount <= 0) {
+      showMessage("Geçerli bir tutar giriniz", "error");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await addCredit(user.uid, parseFloat(creditAmount));
+      showMessage(`✅ ${creditAmount} başarıyla eklendi!`, "success");
+      setCreditAmount("");
+      await loadBalance();
+    } catch (error) {
+      showMessage(`❌ Hata: ${error.message}`, "error");
     } finally {
-      setLoadingMatches(false);
+      setLoading(false);
     }
   };
 
-  const handleSetStatus = async (matchId, newStatus) => {
+  const handleDeductCredit = async (e) => {
+    e.preventDefault();
+    if (!deductAmount || isNaN(deductAmount) || deductAmount <= 0) {
+      showMessage("Geçerli bir tutar giriniz", "error");
+      return;
+    }
+
+    setLoading(true);
     try {
-      await updateMatchStatus(matchId, newStatus);
-      alert(`✅ Durum güncellendi: ${newStatus}`);
-      loadMatches();
-    } catch (err) {
-      alert("Durum güncelleme hatası: " + err.message);
+      await deductCredit(user.uid, parseFloat(deductAmount), "Test işlemi - Bakiye çıkarma");
+      showMessage(`✅ ${deductAmount} başarıyla çıkarıldı!`, "success");
+      setDeductAmount("");
+      await loadBalance();
+    } catch (error) {
+      showMessage(`❌ Hata: ${error.message}`, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleComplete = async (m) => {
+  const handleCreateMatch = async (e) => {
+    e.preventDefault();
+    if (!matchAmount || isNaN(matchAmount) || matchAmount <= 0) {
+      showMessage("Geçerli bir giriş ücreti giriniz", "error");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const winner = prompt(
-        `Kazanan kullanıcı ID'si girin (öneri: ${m.olusturan_id} veya ${m.katilan_id}):`
-      );
-      if (!winner) return;
-      await completeMatch(m.id, winner, m.olusturan_id, m.katilan_id, m.giris_ucreti);
-      alert("✅ Maç tamamlandı ve ödül dağıtıldı.");
-      loadMatches();
-    } catch (err) {
-      alert("Maç tamamlama hatası: " + err.message);
+      const result = await createMatch(user.uid, gameType, parseFloat(matchAmount), targetGoal || "Test Hedefi");
+      setCreatedMatchId(result.matchId);
+      showMessage(`✅ Maç başarıyla oluşturuldu! ID: ${result.matchId}`, "success");
+      setMatchAmount("");
+      setTargetGoal("");
+      await loadBalance();
+    } catch (error) {
+      showMessage(`❌ Hata: ${error.message}`, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCancel = async (matchId) => {
+  const handleUpdateMatchStatus = async (e) => {
+    e.preventDefault();
+    if (!matchIdForStatus) {
+      showMessage("Maç ID'si giriniz", "error");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const ok = window.confirm("Bu maçı iptal etmek istediğinizden emin misiniz?");
-      if (!ok) return;
-      await cancelMatch(matchId);
-      alert("✅ Maç iptal edildi ve iadeler işlendi.");
-      loadMatches();
-    } catch (err) {
-      alert("Maç iptal hatası: " + err.message);
+      await updateMatchStatus(matchIdForStatus, newStatus);
+      showMessage(`✅ Maç durumu "${newStatus}" olarak güncellendi!`, "success");
+      setMatchIdForStatus("");
+    } catch (error) {
+      showMessage(`❌ Hata: ${error.message}`, "error");
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleJoin = async (matchId) => {
+  const handleCompleteMatch = async (e) => {
+    e.preventDefault();
+    if (!matchIdForComplete || !winnerUserId) {
+      showMessage("Maç ID'si ve kazanan kullanıcı ID'si giriniz", "error");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const asUid = prompt("Hangi kullanıcı UID ile katılmak istiyorsunuz? (mevcut kullanıcı için boş bırakın)");
-      const joinUid = asUid && asUid.trim() ? asUid.trim() : user.uid;
-      await joinMatch(matchId, joinUid);
-      alert("✅ Başarıyla maça katıldı.");
-      loadMatches();
-      refreshBalance();
-    } catch (err) {
-      alert("Maça katılma hatası: " + err.message);
+      await completeMatch(matchIdForComplete, winnerUserId, user.uid, "test-user-2", 100);
+      showMessage(`✅ Maç tamamlandı! Kazanan: ${winnerUserId}`, "success");
+      setMatchIdForComplete("");
+      setWinnerUserId("");
+    } catch (error) {
+      showMessage(`❌ Hata: ${error.message}`, "error");
+    } finally {
+      setLoading(false);
     }
   };
-
-  if (authLoading) return <div className="p-10 text-white">Yükleniyor...</div>;
 
   return (
-    <div className="p-10 bg-gray-900 min-h-screen text-white relative">
-
-      {/* ÜSTTE BUTONLAR */}
-      <div className="absolute top-5 right-5 flex gap-3">
-        <button
-          onClick={() => navigate("/lobby")}
-          className="bg-green-600 hover:bg-green-500 px-6 py-2 rounded-lg font-bold shadow-lg transition-all"
-        >
-          🎮 Lobi'ye Git
-        </button>
-        <button
-          onClick={() => logoutUser()}
-          className="bg-red-600 hover:bg-red-700 px-6 py-2 rounded-lg font-bold shadow-lg transition-all"
-        >
-          Güvenli Çıkış Yap
-        </button>
+    <div className="test-dashboard-container">
+      <div className="test-dashboard-header">
+        <h1>🧪 Test Dashboard</h1>
+        <p>Uygulamanın temel fonksiyonlarını test edin</p>
       </div>
 
-      <h1 className="text-3xl font-extrabold mb-8 text-blue-500">SkillMatch - Test Paneli</h1>
+      {message && <div className={`test-alert test-alert-${messageType}`}>{message}</div>}
 
-      <div className="bg-gray-800 p-6 rounded-xl mb-6 border border-gray-700 shadow-xl">
-        <h2 className="text-xl font-semibold">
-          👤 Hoş geldin, <span className="text-green-400">{userData?.kullanici_adi || "Yükleniyor..."}</span>
-        </h2>
-        <p className="text-gray-400 mt-1">Email: {user?.email}</p>
-        <p className="text-gray-400 mt-1">Riot ID: {userData?.riot_id || "Belirtilmemiş"}</p>
+      <div className="test-balance-card">
+        <h2>💰 Mevcut Bakiye</h2>
+        <div className="test-balance-amount">{balance.toFixed(2)}</div>
+        <button onClick={loadBalance} className="test-btn test-btn-secondary" disabled={loading}>Yenile</button>
       </div>
 
-      <div className="bg-gray-800 p-6 rounded-xl mb-6 border border-l-4 border-l-green-500 shadow-xl">
-        <p className="text-gray-400 text-sm uppercase tracking-wider">Güncel Bakiyen</p>
-        <p className="text-4xl font-mono font-bold text-green-400 mt-2">
-          {currentBalance} ₺
-        </p>
-      </div>
-
-      {/* TEST BUTONLARI */}
-      <div className="space-y-4">
-        <div className="flex gap-4 flex-wrap">
-          <button
-            onClick={handleUpdate}
-            className="bg-blue-600 hover:bg-blue-500 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
-          >
-            💳 Kredi Yükle (+)
-          </button>
-
-          <button
-            onClick={handleDeduct}
-            className="bg-red-600 hover:bg-red-500 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
-          >
-            💸 Para Harca (-)
-          </button>
-
-          <button
-            onClick={handleCreateMatch}
-            className="bg-purple-600 hover:bg-purple-500 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
-          >
-            🎮 Maç İlanı Aç
-          </button>
-
-          <button
-            onClick={handleSeedProfile}
-            className="bg-amber-600 hover:bg-amber-500 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
-          >
-            🧪 Profil Seed
-          </button>
-
-          <button
-            onClick={handleSeedAllUsers}
-            className="bg-amber-800 hover:bg-amber-700 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
-          >
-            🧪 Toplu Seed
-          </button>
-
-          <button
-            onClick={refreshBalance}
-            className="bg-gray-700 hover:bg-gray-600 px-8 py-3 rounded-xl font-bold text-lg shadow-lg transform active:scale-95 transition-all"
-          >
-            🔄 Bakiye Güncelle
-          </button>
-        </div>
-      </div>
-
-      {/* BİLGİ KUTUSU */}
-      <div className="mt-10 bg-blue-900/30 border border-blue-500 p-6 rounded-xl">
-        <h3 className="text-lg font-bold text-blue-400 mb-3">📋 Test Paneli Rehberi</h3>
-        <ul className="text-gray-300 space-y-2 text-sm">
-          <li>✅ <strong>Kredi Yükle:</strong> Cüzdanınıza test kredisi ekler</li>
-          <li>✅ <strong>Para Harca:</strong> Cüzdanınızdan para düşer (bakiye kontrolü yapılır)</li>
-          <li>✅ <strong>Maç İlanı Aç:</strong> Yeni bir maç açar ve para bloke eder</li>
-          <li>✅ <strong>Bakiye Güncelle:</strong> Güncel bakiyeyi yeniden çeker</li>
-          <li>⚠️ Lobi görmek için <strong>"Lobi"</strong> sayfasına git</li>
-        </ul>
-      </div>
-
-      {/* MAÇ DURUM MAKİNESİ TEST PANELİ */}
-      <div className="mt-8 bg-gray-800 p-6 rounded-xl border border-gray-700 shadow-xl">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-white">🧭 Maç Durum Makinesi Testleri</h3>
-          <div className="flex gap-2">
-            <button
-              onClick={loadMatches}
-              className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-md font-semibold"
-            >
-              {loadingMatches ? "Yükleniyor..." : "Maçlarımı Yükle"}
-            </button>
-            <button
-              onClick={() => setMatches([])}
-              className="bg-gray-600 hover:bg-gray-500 px-4 py-2 rounded-md font-semibold"
-            >
-              Temizle
-            </button>
-          </div>
+      <div className="test-grid">
+        <div className="test-card">
+          <h3>➕ Bakiye Ekleme</h3>
+          <form onSubmit={handleAddCredit}>
+            <input type="number" placeholder="Tutar ()" value={creditAmount} onChange={(e) => setCreditAmount(e.target.value)} min="0.01" step="0.01" disabled={loading} />
+            <button type="submit" className="test-btn test-btn-success" disabled={loading}>{loading ? "şleniyor..." : "Kredi Ekle"}</button>
+          </form>
+          <small>Örnek: 100</small>
         </div>
 
-        {matches.length === 0 ? (
-          <p className="text-gray-400">Henüz maç yok veya liste boş. "Maçlarımı Yükle" butonuna tıklayın.</p>
-        ) : (
-          <div className="space-y-4">
-            {matches.map((m) => (
-              <div key={m.id} className="bg-gray-900 p-4 rounded-lg border border-gray-700">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-300">ID: <span className="text-yellow-300">{m.id}</span></p>
-                    <p className="text-sm text-gray-300">Oyun: {m.oyun_turu} • Ücret: {m.giris_ucreti} ₺</p>
-                    <p className="text-sm text-gray-300">Durum: <span className="text-green-300">{m.durum}</span></p>
-                    <p className="text-sm text-gray-400">Oluşturan: {m.olusturan_id} • Katılan: {m.katilan_id || "-"}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    {m.durum === "beklemede" && (
-                      <>
-                        <button onClick={() => handleJoin(m.id)} className="bg-emerald-600 px-3 py-1 rounded-md">Katıl</button>
-                        <button onClick={() => handleSetStatus(m.id, "oynanıyor")} className="bg-blue-600 px-3 py-1 rounded-md">Başlat (oynanıyor)</button>
-                        <button onClick={() => handleCancel(m.id)} className="bg-red-600 px-3 py-1 rounded-md">İptal Et</button>
-                      </>
-                    )}
+        <div className="test-card">
+          <h3>➖ Bakiye Çıkarma</h3>
+          <form onSubmit={handleDeductCredit}>
+            <input type="number" placeholder="Tutar ()" value={deductAmount} onChange={(e) => setDeductAmount(e.target.value)} min="0.01" step="0.01" disabled={loading} />
+            <button type="submit" className="test-btn test-btn-danger" disabled={loading}>{loading ? "şleniyor..." : "Kredi Çıkar"}</button>
+          </form>
+          <small>Örnek: 50</small>
+        </div>
 
-                    {m.durum === "oynanıyor" && (
-                      <>
-                        <button onClick={() => handleComplete(m)} className="bg-amber-600 px-3 py-1 rounded-md">Tamamla</button>
-                        <button onClick={() => handleCancel(m.id)} className="bg-red-600 px-3 py-1 rounded-md">İptal Et (iade)</button>
-                      </>
-                    )}
+        <div className="test-card">
+          <h3>🎮 Maç Oluşturma</h3>
+          <form onSubmit={handleCreateMatch}>
+            <select value={gameType} onChange={(e) => setGameType(e.target.value)} disabled={loading}>
+              <option value="CS2">CS2</option>
+              <option value="Valorant">Valorant</option>
+              <option value="Dota2">Dota 2</option>
+              <option value="LoL">League of Legends</option>
+            </select>
+            <input type="number" placeholder="Giriş Ücreti ()" value={matchAmount} onChange={(e) => setMatchAmount(e.target.value)} min="0.01" step="0.01" disabled={loading} />
+            <input type="text" placeholder="Hedef (opsiyonel)" value={targetGoal} onChange={(e) => setTargetGoal(e.target.value)} disabled={loading} />
+            <button type="submit" className="test-btn test-btn-primary" disabled={loading}>{loading ? "Oluşturuluyor..." : "Maç Oluştur"}</button>
+          </form>
+          {createdMatchId && <div className="test-success-box">✅ Maç ID: <code>{createdMatchId}</code></div>}
+          <small>Bakiyeden giriş ücreti düşülecek</small>
+        </div>
 
-                    {m.durum === "tamamlandı" && (
-                      <span className="text-sm text-gray-400 px-3 py-1">Tamamlandı</span>
-                    )}
+        <div className="test-card">
+          <h3>🔄 Maç Durumu Güncelle</h3>
+          <form onSubmit={handleUpdateMatchStatus}>
+            <input type="text" placeholder="Maç ID" value={matchIdForStatus} onChange={(e) => setMatchIdForStatus(e.target.value)} disabled={loading} />
+            <select value={newStatus} onChange={(e) => setNewStatus(e.target.value)} disabled={loading}>
+              <option value="oynanıyor">Oynanıyor</option>
+              <option value="tamamlandı">Tamamlandı</option>
+              <option value="iptal">ptal</option>
+            </select>
+            <button type="submit" className="test-btn test-btn-warning" disabled={loading}>{loading ? "Güncelleniyor..." : "Durumu Güncelle"}</button>
+          </form>
+          <small>Geçerli durum geçişleri: beklemede→oynanıyor/iptal, oynanıyor→tamamlandı/iptal</small>
+        </div>
 
-                    {m.durum === "iptal" && (
-                      <span className="text-sm text-gray-400 px-3 py-1">İptal Edildi</span>
-                    )}
-                  </div>
-                </div>
+        <div className="test-card">
+          <h3>🏆 Maç Tamamla (Kazanan Belirle)</h3>
+          <form onSubmit={handleCompleteMatch}>
+            <input type="text" placeholder="Maç ID" value={matchIdForComplete} onChange={(e) => setMatchIdForComplete(e.target.value)} disabled={loading} />
+            <input type="text" placeholder="Kazanan Kullanıcı ID" value={winnerUserId} onChange={(e) => setWinnerUserId(e.target.value)} disabled={loading} />
+            <button type="submit" className="test-btn test-btn-success" disabled={loading}>{loading ? "Tamamlanıyor..." : "Maçı Tamamla"}</button>
+          </form>
+          <small>Maç "oynanıyor" durumunda olmalıdır</small>
+        </div>
 
-                <details className="mt-3 text-xs text-gray-400">
-                  <summary className="cursor-pointer">Ham veri</summary>
-                  <pre className="mt-2 whitespace-pre-wrap">{JSON.stringify(m, null, 2)}</pre>
-                </details>
-              </div>
-            ))}
+        <div className="test-card">
+          <h3>ℹ️ Test Bilgileri</h3>
+          <div className="test-info-box">
+            <p><strong>Kullanıcı ID:</strong> <code>{user?.uid}</code></p>
+            <p><strong>Email:</strong> {user?.email}</p>
+            <p><strong>Durum Makinesi:</strong></p>
+            <ul>
+              <li>beklemede → oynanıyor</li>
+              <li>beklemede → iptal</li>
+              <li>oynanıyor → tamamlandı</li>
+              <li>oynanıyor → iptal</li>
+            </ul>
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
