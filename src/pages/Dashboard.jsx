@@ -1,19 +1,23 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { checkBalance } from '../services/walletService';
-import { getUserMatchHistory } from '../services/matchService';
-import { getUserById, getUsersByIds } from '../services/userService';
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth";
+import { checkBalance } from "../services/walletService";
+import { getUserMatchHistory } from "../services/matchService";
+import { getUserById, getUsersByIds } from "../services/userService";
 import {
   buildMatchStats,
   buildPerformanceTrend,
   mapMatchesForTable,
-} from '../services/statsService';
-import StatCard from '../components/StatCard';
-import ChartCard from '../components/ChartCard';
-import RecentMatchesTable from '../components/RecentMatchesTable';
-import WinLossChart from '../components/WinLossChart';
-import PerformanceChart from '../components/PerformanceChart';
-import './Dashboard.css';
+} from "../services/statsService";
+import StatCard from "../components/StatCard";
+import ChartCard from "../components/ChartCard";
+import RecentMatchesTable from "../components/RecentMatchesTable";
+import WinLossChart from "../components/WinLossChart";
+import PerformanceChart from "../components/PerformanceChart";
+import Footer from "../components/Footer.jsx";
+import AppNavbar from "../components/AppNavbar.jsx";
+import "./Landing.css";
+import "./Dashboard.css";
 
 /**
  * Dashboard Component
@@ -110,6 +114,29 @@ const Dashboard = () => {
     }
   }, [authLoading, loadDashboardData]);
 
+  const hasMatchData = recentMatches?.length > 0;
+  const hasTrendData = chartData?.labels?.length > 0 && chartData?.data?.length > 0;
+
+  const creditKpis = useMemo(() => {
+    const kpis = {
+      totalEarned: 0,
+      totalSpent: 0,
+      netChange: 0,
+    };
+
+    if (!recentMatches || recentMatches.length === 0) return kpis;
+
+    recentMatches.forEach((match) => {
+      const raw = Number(match?.creditChange);
+      if (Number.isNaN(raw) || raw === 0) return;
+      if (raw > 0) kpis.totalEarned += raw;
+      if (raw < 0) kpis.totalSpent += Math.abs(raw);
+      kpis.netChange += raw;
+    });
+
+    return kpis;
+  }, [recentMatches]);
+
   // ============================================
   // HANDLER FUNCTIONS FOR USER INTERACTIONS
   // ============================================
@@ -167,51 +194,67 @@ const Dashboard = () => {
   if (authLoading || dataLoading) {
     return (
       <div className="dashboard-loading">
-        <div className="loading-spinner">Loading Dashboard...</div>
+        <div className="loading-spinner">SkillMatch Dashboard yükleniyor...</div>
       </div>
     );
   }
 
   return (
-    <div className="dashboard-wrapper">
-      {/* DASHBOARD HEADER with User Info and Balance */}
-      <div className="dashboard-header">
-        <div className="header-left">
-          <div
-            className="user-avatar"
-            onClick={handleViewProfile}
-            style={{ cursor: 'pointer' }}
-            title="Click to view profile"
-          >
-            {dashboardUser.username?.[0]?.toUpperCase() || 'U'}
-          </div>
-          <div className="user-info">
-            <h2 className="user-name">{dashboardUser.username || 'Player'}</h2>
-            <p className="user-status">Rank: {dashboardUser.rank}</p>
-          </div>
-        </div>
-
-        <div className="header-right">
-          <div
-            className="balance-card"
-            onClick={handleOpenWallet}
-            style={{ cursor: 'pointer' }}
-            title="Click to open wallet"
-          >
-            <span className="balance-label">Current Balance</span>
-            <span className="balance-amount">
-              ₺{dataLoading ? '...' : balance.toLocaleString()}
-            </span>
-          </div>
-          <button
-            className="btn-add-credit"
-            onClick={handleAddCredit}
-            title="Add credits to your account"
-          >
-            + Add Credit
-          </button>
-        </div>
+    <div className="dashboard-wrapper dashboard-page">
+      {/* Background */}
+      <div className="dashboard-bg" aria-hidden="true">
+        <div className="dashboard-orb dashboard-orb--a" />
+        <div className="dashboard-orb dashboard-orb--b" />
+        <div className="dashboard-orb dashboard-orb--c" />
       </div>
+
+      <AppNavbar
+        balance={balance}
+        username={dashboardUser.username}
+        avatarUrl={profileData?.avatarUrl || user?.photoURL}
+      />
+
+      <main className="dashboard-main">
+        <div className="landing-container">
+          {/* Hero header (glass) */}
+          <section className="dashboard-heroCard">
+            <div className="dashboard-heroLeft">
+              <button
+                type="button"
+                className="user-avatar"
+                onClick={handleViewProfile}
+                title="View profile"
+              >
+                {dashboardUser.username?.[0]?.toUpperCase() || "U"}
+              </button>
+
+              <div className="user-info">
+                <div className="dashboard-kicker">PERFORMANCE CENTER</div>
+                <h2 className="user-name">{dashboardUser.username || "Player"}</h2>
+                <p className="user-status">Rank: {dashboardUser.rank}</p>
+              </div>
+            </div>
+
+            <div className="dashboard-heroRight">
+              <button
+                type="button"
+                className="balance-card"
+                onClick={handleOpenWallet}
+                title="Open wallet"
+              >
+                <span className="balance-label">Wallet Balance</span>
+                <span className="balance-amount">₺{balance.toLocaleString()}</span>
+              </button>
+
+              <button
+                className="landing-btn landing-btn--primary"
+                onClick={handleAddCredit}
+                type="button"
+              >
+                Kredi Yükle <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </section>
 
       {/* STATS OVERVIEW GRID */}
       <div className="stats-grid">
@@ -247,30 +290,88 @@ const Dashboard = () => {
           trendUp={true}
           color="pink"
         />
+
+        <StatCard
+          title="Current Streak"
+          value={`${userStats.currentStreak}`}
+          icon="🔥"
+          trend={`${userStats.longestWinStreak} best`}
+          trendUp={true}
+          color="cyan"
+        />
+      </div>
+
+      {/* CLAIM / CREDIT KPIs */}
+      <div className="dashboard-kpiStrip">
+        <div className="dashboard-kpiCard">
+          <div className="dashboard-kpiLabel">Completed Claims</div>
+          <div className="dashboard-kpiValue">{userStats.totalMatches}</div>
+          <div className="dashboard-kpiHint">Based on match history</div>
+        </div>
+
+        <div className="dashboard-kpiCard">
+          <div className="dashboard-kpiLabel">Active Claims</div>
+          <div className="dashboard-kpiValue">0</div>
+          <div className="dashboard-kpiHint">TODO: real-time active claims</div>
+        </div>
+
+        <div className="dashboard-kpiCard">
+          <div className="dashboard-kpiLabel">Total Earned</div>
+          <div className="dashboard-kpiValue">₺{creditKpis.totalEarned.toLocaleString()}</div>
+          <div className="dashboard-kpiHint">Last {recentMatches.length} matches</div>
+        </div>
+
+        <div className="dashboard-kpiCard">
+          <div className="dashboard-kpiLabel">Total Spent</div>
+          <div className="dashboard-kpiValue">₺{creditKpis.totalSpent.toLocaleString()}</div>
+          <div className="dashboard-kpiHint">Last {recentMatches.length} matches</div>
+        </div>
+
+        <div className="dashboard-kpiCard">
+          <div className="dashboard-kpiLabel">Success Rate</div>
+          <div className="dashboard-kpiValue">{userStats.winRate}%</div>
+          <div className="dashboard-kpiHint">Wins vs losses</div>
+        </div>
       </div>
 
       {/* CHARTS SECTION */}
       <div className="charts-section">
         <div className="chart-col chart-col--small">
           <ChartCard title="Match Statistics">
-            <WinLossChart
-              wins={userStats.wins}
-              losses={userStats.losses}
-              title="Win/Loss Ratio"
-            />
+            {hasMatchData ? (
+              <WinLossChart
+                wins={userStats.wins}
+                losses={userStats.losses}
+                title="Win/Loss Ratio"
+              />
+            ) : (
+              <div className="dashboard-emptyState">
+                <div className="dashboard-emptyIcon" aria-hidden="true">📊</div>
+                <div className="dashboard-emptyTitle">Henüz istatistik yok</div>
+                <div className="dashboard-emptyDesc">İlk iddianı oyna, performans grafikleri burada görünsün.</div>
+              </div>
+            )}
           </ChartCard>
         </div>
 
         <div className="chart-col chart-col--large">
           <ChartCard title="Performance Trend">
-            <PerformanceChart
-              data={chartData.data}
-              labels={chartData.labels}
-              title="Score Progression"
-              yAxisLabel="Score"
-              lineColor="rgba(0, 245, 212, 1)"
-              fillColor="rgba(0, 245, 212, 0.1)"
-            />
+            {hasTrendData ? (
+              <PerformanceChart
+                data={chartData.data}
+                labels={chartData.labels}
+                title="Score Progression"
+                yAxisLabel="Score"
+                lineColor="rgba(0, 245, 212, 1)"
+                fillColor="rgba(0, 245, 212, 0.1)"
+              />
+            ) : (
+              <div className="dashboard-emptyState">
+                <div className="dashboard-emptyIcon" aria-hidden="true">📈</div>
+                <div className="dashboard-emptyTitle">Trend verisi hazır değil</div>
+                <div className="dashboard-emptyDesc">Maç geçmişin arttıkça performans trendin otomatik oluşacak.</div>
+              </div>
+            )}
           </ChartCard>
         </div>
       </div>
@@ -283,6 +384,7 @@ const Dashboard = () => {
             className="btn-refresh"
             onClick={handleRefreshStats}
             title="Refresh match history"
+            type="button"
           >
             🔄 Refresh
           </button>
@@ -293,6 +395,11 @@ const Dashboard = () => {
           onViewDetails={handleViewMatchDetails}
         />
       </div>
+
+        </div>
+      </main>
+
+      <Footer />
     </div>
   );
 };

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+﻿import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { addCredit, deductCredit, checkBalance } from "../services/walletService";
 import { createMatch, updateMatchStatus, completeMatch } from "../services/matchService";
@@ -11,6 +11,12 @@ export default function TestDashboard() {
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
 
+  const showMessage = useCallback((msg, type = "info") => {
+    setMessage(msg);
+    setMessageType(type);
+    setTimeout(() => setMessage(""), 5000);
+  }, []);
+
   const [creditAmount, setCreditAmount] = useState("");
   const [deductAmount, setDeductAmount] = useState("");
   const [gameType, setGameType] = useState("CS2");
@@ -22,7 +28,7 @@ export default function TestDashboard() {
   const [matchIdForComplete, setMatchIdForComplete] = useState("");
   const [winnerUserId, setWinnerUserId] = useState("");
 
-  const loadBalance = async () => {
+  const loadBalance = useCallback(async () => {
     if (!user) return;
     try {
       const currentBalance = await checkBalance(user.uid);
@@ -31,17 +37,11 @@ export default function TestDashboard() {
     } catch (error) {
       showMessage(`Bakiye yükleme hatası: ${error.message}`, "error");
     }
-  };
+  }, [showMessage, user]);
 
   useEffect(() => {
     loadBalance();
-  }, [user]);
-
-  const showMessage = (msg, type = "info") => {
-    setMessage(msg);
-    setMessageType(type);
-    setTimeout(() => setMessage(""), 5000);
-  };
+  }, [loadBalance]);
 
   const handleAddCredit = async (e) => {
     e.preventDefault();

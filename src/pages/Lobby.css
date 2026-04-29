@@ -1,37 +1,260 @@
 /* src/pages/Lobby.css */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Space+Grotesk:wght@600&display=swap');
 
-:root {
-  --surface: #0e1415;
-  --on-surface: #dee3e4;
-  --text-muted: #83948f;
-  --primary: #00f5d4;
-  --on-primary: #00382f;
-  --card-border: rgba(0, 245, 212, 0.15);
-  --card-hover: rgba(0, 245, 212, 0.4);
+/* Lobby is styled to match Landing's visual language (gradient + neon + glass).
+   Keep variables scoped to avoid global overrides. */
+.lobby-page {
+  --sm-bg: #050912;
+  --sm-panel: rgba(10, 15, 26, 0.6);
+  --sm-panel-2: rgba(12, 18, 32, 0.42);
+  --sm-cyan: #00f5d4;
+  --sm-purple: #a855f7;
+  --sm-text: rgba(255, 255, 255, 0.92);
+  --sm-muted: rgba(255, 255, 255, 0.66);
+  --sm-border: rgba(255, 255, 255, 0.08);
+  --sm-border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Backwards-compatible aliases for existing Lobby styles */
+  --surface: var(--sm-bg);
+  --on-surface: var(--sm-text);
+  --text-muted: var(--sm-muted);
+  --primary: var(--sm-cyan);
+  --on-primary: rgba(4, 10, 18, 0.95);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --card-hover: rgba(0, 245, 212, 0.28);
+
+  min-height: 100vh;
+  color: var(--sm-text);
+  background:
+    radial-gradient(1200px 600px at 15% -10%, rgba(0, 245, 212, 0.20), transparent 60%),
+    radial-gradient(900px 550px at 85% 10%, rgba(168, 85, 247, 0.18), transparent 58%),
+    radial-gradient(900px 700px at 50% 120%, rgba(0, 245, 212, 0.12), transparent 55%),
+    linear-gradient(180deg, #050812 0%, #050912 55%, #04070f 100%);
+  position: relative;
+  overflow-x: hidden;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
 }
 
-.lobby-wrapper { display: flex; min-height: 100vh; background-color: var(--surface); color: var(--on-surface); font-family: 'Inter', sans-serif; overflow: hidden; }
+.lobby-wrapper {
+  display: flex;
+  flex-direction: column;
+}
 
-/* --- SIDEBAR --- */
-.sidebar { width: 260px; background: rgba(14, 20, 21, 0.8); border-right: 1px solid rgba(131, 148, 143, 0.1); display: flex; flex-direction: column; }
-.sidebar-brand { padding: 24px; font-size: 24px; font-weight: 800; font-style: italic; color: var(--primary); }
-.sidebar-nav { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 0 16px; }
-.nav-item { display: flex; align-items: center; gap: 16px; padding: 16px; border-radius: 8px; color: var(--text-muted); font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s ease; }
-.nav-item:hover { color: var(--on-surface); background: rgba(255, 255, 255, 0.02); }
-.nav-item.active { background: rgba(0, 245, 212, 0.1); color: var(--primary); border-left: 3px solid var(--primary); }
-.sidebar-profile { padding: 24px 16px; border-top: 1px solid rgba(131, 148, 143, 0.1); display: flex; align-items: center; gap: 12px; }
-.profile-info h4 { margin: 0; font-size: 14px; font-weight: 600; color: var(--on-surface); }
-.profile-info span { font-size: 12px; color: var(--text-muted); }
+/* Background layers */
+.lobby-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
 
-/* --- ANA İÇERİK --- */
-.main-content { flex: 1; display: flex; flex-direction: column; padding: 32px 40px; position: relative; overflow-y: auto; }
-.top-header { display: flex; justify-content: flex-end; align-items: center; gap: 16px; margin-bottom: 32px; }
-.credit-badge { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 16px; border-radius: 9999px; display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 14px; }
-.credit-icon { color: var(--primary); font-size: 16px; }
+.lobby-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(40px);
+  opacity: 0.9;
+}
 
-.btn-primary { background: var(--primary); color: var(--on-primary); border: none; padding: 10px 24px; border-radius: 9999px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s ease; }
-.btn-primary:hover { box-shadow: 0 0 20px rgba(0, 245, 212, 0.5); }
+.lobby-orb--a {
+  width: 520px;
+  height: 520px;
+  left: -180px;
+  top: -160px;
+  background: radial-gradient(circle at 30% 30%, rgba(0, 245, 212, 0.55), transparent 60%);
+}
+
+.lobby-orb--b {
+  width: 520px;
+  height: 520px;
+  right: -200px;
+  top: -140px;
+  background: radial-gradient(circle at 55% 35%, rgba(168, 85, 247, 0.55), transparent 62%);
+}
+
+.lobby-orb--c {
+  width: 560px;
+  height: 560px;
+  left: 40%;
+  bottom: -260px;
+  background: radial-gradient(circle at 45% 45%, rgba(0, 245, 212, 0.30), transparent 62%);
+}
+
+.lobby-grid {
+  display: none;
+}
+
+/* Top nav */
+.lobby-navbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding: 14px 0;
+  background: rgba(5, 9, 18, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.lobby-navbarInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.lobby-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.lobby-brandMark {
+  filter: drop-shadow(0 0 14px rgba(0, 245, 212, 0.25));
+}
+
+.lobby-brandText {
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.lobby-navLinks {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.lobby-navLink {
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 700;
+  transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+
+.lobby-navLink:hover {
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 14px rgba(0, 245, 212, 0.24);
+}
+
+.lobby-navLink.isActive {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.lobby-navActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.lobby-balancePill {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.lobby-balanceLabel {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.66);
+}
+
+.lobby-balanceValue {
+  font-size: 13px;
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* Secondary tabs */
+.lobby-subHeader {
+  position: relative;
+  z-index: 6;
+  padding: 10px 0;
+}
+
+.lobby-subHeaderInner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.lobby-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.lobby-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 900;
+  font-size: 12px;
+  cursor: pointer;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.lobby-tab:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 245, 212, 0.34);
+  box-shadow: 0 0 0 1px rgba(0, 245, 212, 0.14), 0 10px 26px rgba(0, 0, 0, 0.45);
+}
+
+.lobby-tab.isActive {
+  color: rgba(4, 10, 18, 0.95);
+  border-color: transparent;
+  background: linear-gradient(90deg, rgba(0, 245, 212, 0.95), rgba(168, 85, 247, 0.95));
+  box-shadow: 0 0 30px rgba(0, 245, 212, 0.18), 0 14px 44px rgba(0, 0, 0, 0.55);
+}
+
+.lobby-tabIcon {
+  opacity: 0.9;
+}
+
+
+/* --- MAIN --- */
+.main-content {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 0 54px;
+}
+
+/* Buttons used across Lobby (wallet/settings/modal) */
+.btn-primary {
+  background: linear-gradient(90deg, rgba(0, 245, 212, 0.95), rgba(168, 85, 247, 0.75));
+  color: rgba(4, 10, 18, 0.95);
+  border: none;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 10px 28px rgba(0, 245, 212, 0.14), inset 0 1px 0 rgba(255,255,255,0.32);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 26px rgba(0, 245, 212, 0.26), 0 14px 40px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255,255,255,0.4);
+}
 
 .btn-outline {
   background: rgba(0, 245, 212, 0.08);
@@ -70,19 +293,128 @@
   box-shadow: none;
 }
 
-.lobby-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-.lobby-header h1 { margin: 0; font-size: 24px; font-weight: 600; color: var(--primary); }
+.lobby-header {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 18px;
+}
 
-.filters { display: flex; gap: 12px; }
-.filter-chip { background: transparent; border: 1px solid rgba(255, 255, 255, 0.1); padding: 8px 20px; border-radius: 9999px; color: var(--on-surface); font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; gap: 8px; }
-.filter-chip.active { border-color: var(--primary); color: var(--primary); background: rgba(0, 245, 212, 0.05); }
+.lobby-titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.lobby-header h1 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 1000;
+  letter-spacing: 0.01em;
+}
+
+.lobby-cta {
+  white-space: nowrap;
+}
+
+.lobby-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.lobby-filterPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.86);
+  font-weight: 900;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.lobby-filterPill:hover {
+  transform: translateY(-1px);
+  border-color: rgba(0, 245, 212, 0.30);
+  box-shadow: 0 0 18px rgba(0, 245, 212, 0.12);
+}
+
+.lobby-filterPill.isActive {
+  border-color: rgba(0, 245, 212, 0.55);
+  background: rgba(0, 245, 212, 0.07);
+  box-shadow: inset 0 0 0 1px rgba(0, 245, 212, 0.10);
+}
+
+.lobby-section {
+  margin-bottom: 28px;
+}
+
+.lobby-sectionTitle {
+  margin: 0 0 14px;
+  font-size: 12px;
+  font-weight: 1000;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.lobby-emptyCard {
+  text-align: center;
+  padding: 28px;
+}
+
+.lobby-emptyIcon {
+  font-size: 32px;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 0 18px rgba(0, 245, 212, 0.18));
+}
+
+.lobby-emptyTitle {
+  margin: 0 0 6px;
+  font-weight: 1000;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.lobby-emptyDesc {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-weight: 700;
+}
 
 /* --- HOLOGRAM KARTLAR (SWEEP EFFECT) --- */
 .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-.match-card { background: rgba(255, 255, 255, 0.015); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--card-border); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 20px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); position: relative; overflow: hidden; }
+.match-card {
+  background:
+    radial-gradient(900px 420px at 50% 20%, rgba(0, 245, 212, 0.07), transparent 64%),
+    radial-gradient(800px 420px at 60% 0%, rgba(168, 85, 247, 0.06), transparent 66%),
+    linear-gradient(135deg, rgba(10, 15, 26, 0.72), rgba(7, 11, 20, 0.52));
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-top: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 20px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
 .card-user, .card-target, .card-footer { position: relative; z-index: 2; }
 .match-card::after { content: ''; position: absolute; top: 0; left: -150%; width: 50%; height: 100%; background: linear-gradient(105deg, transparent 20%, rgba(0, 245, 212, 0.05) 25%, rgba(0, 245, 212, 0.25) 50%, transparent 55%); transform: skewX(-20deg); transition: left 0.6s ease-in-out; pointer-events: none; z-index: 1; }
-.match-card:hover { box-shadow: 0 10px 25px rgba(0, 245, 212, 0.15); border-color: var(--card-hover); transform: translateY(-5px) scale(1.02); }
+.match-card:hover {
+  box-shadow: 0 0 34px rgba(0, 245, 212, 0.14), 0 22px 72px rgba(0, 0, 0, 0.68), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  border-color: rgba(0, 245, 212, 0.22);
+  transform: translateY(-3px);
+}
 .match-card:hover::after { left: 200%; }
 
 .match-card-clickable { cursor: pointer; }
@@ -267,7 +599,46 @@
 .add-icon { font-size: 24px; color: var(--primary); position: relative; z-index: 2; }
 .add-card p { color: var(--on-surface); font-size: 14px; line-height: 1.5; margin: 0; position: relative; z-index: 2; }
 
-.fab-button { position: absolute; bottom: 40px; right: 40px; background: var(--primary); color: var(--on-primary); border: none; padding: 16px 32px; border-radius: 9999px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 0 20px rgba(0, 245, 212, 0.3); }
+.fab-button {
+  display: none;
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 50;
+  background: linear-gradient(90deg, rgba(0, 245, 212, 0.95), rgba(168, 85, 247, 0.95));
+  color: rgba(4, 10, 18, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 14px 16px;
+  border-radius: 14px;
+  font-weight: 1000;
+  font-size: 13px;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 0 30px rgba(0, 245, 212, 0.22), 0 18px 55px rgba(0, 0, 0, 0.60), inset 0 1px 0 rgba(255,255,255,0.30);
+}
+
+@media (max-width: 720px) {
+  .fab-button {
+    display: inline-flex;
+  }
+
+  .lobby-navLinks {
+    display: none;
+  }
+
+  .lobby-titleRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .lobby-cta {
+    width: 100%;
+    justify-content: center;
+  }
+}
 
 /* --- İDDİA OLUŞTUR MODALI "GLASSY" STİLLER --- */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5, 10, 11, 0.7); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 100; }

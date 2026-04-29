@@ -7,14 +7,25 @@ import React from 'react';
  * Props:
  *   user: Object - User profile data
  *   onEditClick: Function - Edit profile handler
+ *   onLogoutClick: Function - Logout handler (placeholder)
  */
-const ProfileHeader = ({ user, onEditClick }) => {
+const ProfileHeader = ({ user, onEditClick, onLogoutClick }) => {
   return (
     <div className="profile-header-card">
       <div className="profile-header-content">
         <div className="profile-avatar-section">
-          <div className="profile-avatar">
-            {user.username?.[0]?.toUpperCase() || 'U'}
+          <div className="profile-avatar" aria-label="Avatar">
+            {user.avatarUrl ? (
+              <img
+                className="profile-avatarImg"
+                src={user.avatarUrl}
+                alt="User avatar"
+              />
+            ) : (
+              <span className="profile-avatarInitial">
+                {user.username?.[0]?.toUpperCase() || 'U'}
+              </span>
+            )}
           </div>
           {user.isVerified && <div className="verified-badge">✓</div>}
         </div>
@@ -33,7 +44,7 @@ const ProfileHeader = ({ user, onEditClick }) => {
             </div>
             <div className="id-item">
               <span className="id-label">Steam ID:</span>
-              <span className="id-value">{user.steamId ? '***' : 'Not connected'}</span>
+              <span className="id-value">{user.steamId || 'Not connected'}</span>
             </div>
           </div>
 
@@ -48,8 +59,16 @@ const ProfileHeader = ({ user, onEditClick }) => {
         </div>
 
         <div className="profile-actions">
-          <button className="btn-primary btn-edit" onClick={onEditClick}>
-            ✎ Edit Profile
+          <button className="landing-btn landing-btn--primary profile-actionBtn" onClick={onEditClick} type="button">
+            ✎ Profili Düzenle
+          </button>
+          <button
+            className="landing-btn landing-btn--ghost profile-actionBtn profile-actionBtn--danger"
+            onClick={onLogoutClick}
+            type="button"
+            title="Logout"
+          >
+            Çıkış Yap
           </button>
         </div>
       </div>

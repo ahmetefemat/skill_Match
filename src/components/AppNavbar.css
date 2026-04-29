@@ -1,0 +1,212 @@
+/* Shared authenticated-app navbar (Lobby/Dashboard/Profile).
+   Intentionally NOT used on Landing page. */
+
+.appNavbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  padding: 14px 0;
+  background: rgba(5, 9, 18, 0.35);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.appNavbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.appNavbar-left {
+  display: flex;
+  align-items: center;
+  min-width: 200px;
+}
+
+.appNavbar-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.appNavbar-logo {
+  filter: drop-shadow(0 0 14px rgba(0, 245, 212, 0.25));
+}
+
+.appNavbar-brandText {
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.appNavbar-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  flex: 1;
+  min-width: 240px;
+}
+
+.appNavbar-link {
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  transition: color 0.25s ease, text-shadow 0.25s ease, background 0.25s ease,
+    border-color 0.25s ease;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.appNavbar-link:hover {
+  color: rgba(255, 255, 255, 0.92);
+  text-shadow: 0 0 14px rgba(0, 245, 212, 0.24);
+}
+
+.appNavbar-link.isActive {
+  color: rgba(255, 255, 255, 0.96);
+  cursor: default;
+  border-color: rgba(255, 255, 255, 0.14);
+  background: linear-gradient(
+    135deg,
+    rgba(0, 245, 212, 0.14),
+    rgba(168, 85, 247, 0.12)
+  );
+  box-shadow: 0 0 0 1px rgba(0, 245, 212, 0.18), 0 0 18px rgba(0, 245, 212, 0.14);
+  text-shadow: 0 0 18px rgba(0, 245, 212, 0.25);
+}
+
+.appNavbar-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 240px;
+}
+
+.appNavbar-balancePill {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 245, 212, 0.18);
+  box-shadow: 0 12px 28px rgba(0, 245, 212, 0.06);
+}
+
+.appNavbar-balanceLabel {
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.10em;
+  color: rgba(255, 255, 255, 0.70);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.appNavbar-balanceValue {
+  font-weight: 900;
+  color: rgba(255, 255, 255, 0.94);
+  white-space: nowrap;
+}
+
+.appNavbar-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  text-decoration: none;
+  color: rgba(255, 255, 255, 0.92);
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease,
+    box-shadow 0.2s ease;
+  max-width: 260px;
+}
+
+.appNavbar-user:hover {
+  transform: translateY(-1px);
+  border-color: rgba(168, 85, 247, 0.28);
+  box-shadow: 0 12px 28px rgba(168, 85, 247, 0.08);
+}
+
+.appNavbar-user.isActive {
+  cursor: default;
+  border-color: rgba(168, 85, 247, 0.22);
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.16), 0 0 18px rgba(168, 85, 247, 0.10);
+}
+
+.appNavbar-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(
+    135deg,
+    rgba(0, 245, 212, 0.22),
+    rgba(168, 85, 247, 0.18)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.appNavbar-avatarImg {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.appNavbar-avatarInitial {
+  font-weight: 900;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.appNavbar-username {
+  font-weight: 800;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.92);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 860px) {
+  .appNavbar-left {
+    min-width: unset;
+  }
+
+  .appNavbar-center {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-start;
+    gap: 10px;
+    padding-top: 10px;
+  }
+
+  .appNavbar-right {
+    min-width: unset;
+  }
+}
+
+@media (max-width: 520px) {
+  .appNavbar-right {
+    flex-basis: 100%;
+    justify-content: space-between;
+  }
+
+  .appNavbar-user {
+    max-width: 200px;
+  }
+}

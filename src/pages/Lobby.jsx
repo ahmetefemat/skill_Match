@@ -1,16 +1,19 @@
 
-import React, { useState, useEffect } from 'react';
-import './Lobby.css';
-import { useAuth } from '../hooks/useAuth';
-import { auth, db } from '../services/firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import { checkBalance, addCredit, listenToUserTransactions } from '../services/walletService';
-import { createMatch, listenToActiveMatches, listenToPlayingMatches, joinMatch } from '../services/matchService';
-import { logoutUser } from '../services/authService';
+import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
+import "./Lobby.css";
+import { useAuth } from "../hooks/useAuth";
+import { auth, db } from "../services/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { checkBalance, addCredit, listenToUserTransactions } from "../services/walletService";
+import { createMatch, listenToActiveMatches, listenToPlayingMatches, joinMatch } from "../services/matchService";
+import { logoutUser } from "../services/authService";
+import Footer from "../components/Footer.jsx";
+import AppNavbar from "../components/AppNavbar.jsx";
 
 const Lobby = () => {
   // AUTH VE USER DATA
-  const { userData, loading: authLoading } = useAuth();
+  const { loading: authLoading } = useAuth();
   const user = auth.currentUser;
 
   // ANA NAVİGASYON STATE'İ
@@ -245,10 +248,9 @@ const Lobby = () => {
 
   // AYARLAR
   const menus = [
-    { id: 'LOBBY', label: 'LOBBY', icon: '⚏' },
-    { id: 'WALLET', label: 'WALLET', icon: '💳' },
-    { id: 'MATCH HISTORY', label: 'MATCH HISTORY', icon: '⏱' },
-    { id: 'SETTINGS', label: 'SETTINGS', icon: '⚙' }
+    { id: "LOBBY", label: "Lobi", icon: "⚏" },
+    { id: "WALLET", label: "Cüzdan", icon: "💳" },
+    { id: "MATCH HISTORY", label: "Maç Geçmişi", icon: "⏱" },
   ];
 
   if (authLoading || balanceLoading) {
@@ -263,53 +265,54 @@ const Lobby = () => {
     ? playingMatches
     : playingMatches.filter((match) => match.oyun_turu === activeFilter);
 
+  const gameFilters = [
+    { key: "all", value: "Tümü", label: "Tümü" },
+    { key: "lol", value: "LoL", label: "LoL" },
+    { key: "val", value: "Valorant", label: "Valorant" },
+    // Data layer still uses "CS:GO" today; UI label is "CS2".
+    { key: "cs2", value: "CS:GO", label: "CS2" },
+  ];
+
   return (
-    <div className="lobby-wrapper">
-      
-      {/* =========================================
-          SOL MENÜ (SIDEBAR)
-      ========================================== */}
-      <aside className="sidebar">
-        <div className="sidebar-brand">
-          SkillMatch
-        </div>
-        
-        <nav className="sidebar-nav">
-          {menus.map((menu) => (
-            <div 
-              key={menu.id} 
-              onClick={() => setActiveMenu(menu.id)}
-              className={`nav-item ${activeMenu === menu.id ? 'active' : ''}`}
-            >
-              <span>{menu.icon}</span>
-              {menu.label}
-            </div>
-          ))}
-        </nav>
+    <div className="lobby-wrapper lobby-page">
+      {/* Deep layered background (Landing language) */}
+      <div className="lobby-bg" aria-hidden="true">
+        <div className="lobby-orb lobby-orb--a" />
+        <div className="lobby-orb lobby-orb--b" />
+        <div className="lobby-orb lobby-orb--c" />
+        <div className="lobby-grid" />
+      </div>
 
-        <div className="sidebar-profile">
-          <div className="profile-avatar" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.05)', fontSize: '20px'}}>
-            👤
-          </div>
-          <div className="profile-info">
-            <h4>{userData?.kullanici_adi || "Oyuncu"}</h4>
-            <span>{user?.email || "Bağlanıyor..."}</span>
+      <AppNavbar
+        balance={currentBalance}
+        username={user?.displayName || user?.email?.split("@")[0] || "Player"}
+        avatarUrl={user?.photoURL}
+      />
+
+      {/* Secondary (in-page) navigation for Lobby sections */}
+      <div className="lobby-subHeader">
+        <div className="landing-container lobby-subHeaderInner">
+          <div className="lobby-tabs" role="tablist" aria-label="Lobby sections">
+            {menus.map((menu) => (
+              <button
+                key={menu.id}
+                type="button"
+                onClick={() => setActiveMenu(menu.id)}
+                className={`lobby-tab ${activeMenu === menu.id ? "isActive" : ""}`}
+              >
+                <span aria-hidden="true" className="lobby-tabIcon">
+                  {menu.icon}
+                </span>
+                {menu.label}
+              </button>
+            ))}
           </div>
         </div>
-      </aside>
+      </div>
 
-      {/* =========================================
-          ANA İÇERİK ALANI
-      ========================================== */}
-      <main className="main-content">
-        
-        {/* ÜST BAR (KREDİLER) */}
-        <header className="top-header">
-          <div className="credit-badge">
-            <span className="credit-icon">$</span> {currentBalance} Kredi
-          </div>
-          <button className="btn-primary" onClick={() => setActiveMenu('WALLET')}>Kredi Yükle</button>
-        </header>
+      {/* Main content */}
+      <main className="main-content lobby-main">
+        <div className="landing-container">
 
         {/* -------------------------------------------
             1. CANLI LOBİ EKRANI
@@ -317,35 +320,47 @@ const Lobby = () => {
         {activeMenu === 'LOBBY' && (
           <>
             <div className="lobby-header">
-              <h1>Canlı Lobi</h1>
-              
-              <div className="filters">
-                {['Tümü', 'LoL', 'Valorant', 'CS:GO'].map(filter => (
-                  <button 
-                    key={filter}
-                    onClick={() => setActiveFilter(filter)}
-                    className={`filter-chip ${activeFilter === filter ? 'active' : ''}`}
+              <div className="lobby-titleRow">
+                <h1>Canlı Lobi</h1>
+                <button
+                  type="button"
+                  className="landing-btn landing-btn--primary lobby-cta"
+                  onClick={() => setShowModal(true)}
+                >
+                  İddia Oluştur <span aria-hidden="true">→</span>
+                </button>
+              </div>
+
+              <div className="lobby-filters" aria-label="Game filters">
+                {gameFilters.map((f) => (
+                  <button
+                    key={f.key}
+                    type="button"
+                    onClick={() => setActiveFilter(f.value)}
+                    className={`lobby-filterPill ${activeFilter === f.value ? "isActive" : ""}`}
                   >
-                    {filter === 'LoL' && <span>🧙‍♂️</span>}
-                    {filter === 'Valorant' && <span>🔫</span>}
-                    {filter === 'CS:GO' && <span>💣</span>}
-                    {filter}
+                    {f.value === "LoL" && <span aria-hidden="true">🧙‍♂️</span>}
+                    {f.value === "Valorant" && <span aria-hidden="true">🔫</span>}
+                    {f.value === "CS:GO" && <span aria-hidden="true">💣</span>}
+                    {f.label}
                   </button>
                 ))}
               </div>
             </div>
 
             {/* AÇIK MAÇLAR BÖLÜMÜ */}
-            <div style={{marginBottom: '40px'}}>
-              <h2 style={{color: '#fff', marginBottom: '16px', fontSize: '16px', fontWeight: '600', textTransform: 'uppercase', opacity: 0.8}}>📍 Açık İddialar</h2>
+            <section className="lobby-section">
+              <h2 className="lobby-sectionTitle">📍 Açık İddialar</h2>
               <div className="cards-grid">
                 {matchesLoading ? (
-                  <div className="match-card" style={{ textAlign: 'center', opacity: 0.7 }}>
-                    <p>Açık maçlar yükleniyor...</p>
+                  <div className="match-card lobby-emptyCard" role="status">
+                    <p>Açık iddialar yükleniyor...</p>
                   </div>
                 ) : visibleLobbies.length === 0 ? (
-                  <div className="match-card" style={{ textAlign: 'center', opacity: 0.7 }}>
-                    <p>Şu an açık bir maç bulunmuyor. Yeni maç açarak ilk oyuncu ol!</p>
+                  <div className="match-card lobby-emptyCard">
+                    <div className="lobby-emptyIcon" aria-hidden="true">✨</div>
+                    <p className="lobby-emptyTitle">Şu anda açık iddia bulunmuyor.</p>
+                    <p className="lobby-emptyDesc">İlk iddianı oluştur ve rakiplerini bekle.</p>
                   </div>
                 ) : (
                   visibleLobbies.map((lobby) => (
@@ -393,17 +408,17 @@ const Lobby = () => {
                 )}
 
                 {/* Sabit "İddia Ekle" Kartı */}
-                <div className="match-card add-card" onClick={() => setShowModal(true)}>
+                <div className="match-card add-card" onClick={() => setShowModal(true)} role="button" tabIndex={0}>
                   <span className="add-icon">+</span>
                   <p>Kendi iddialarını<br/>oluştur ve rakiplerini<br/>bekle.</p>
                 </div>
               </div>
-            </div>
+            </section>
 
             {/* OYNANAN MAÇLAR BÖLÜMÜ */}
             {visiblePlayingMatches.length > 0 && (
-              <div>
-                <h2 style={{color: '#fff', marginBottom: '16px', fontSize: '16px', fontWeight: '600', textTransform: 'uppercase', opacity: 0.8}}>⚔️ Canlı Maçlar</h2>
+              <section className="lobby-section">
+                <h2 className="lobby-sectionTitle">⚔️ Canlı Maçlar</h2>
                 <div className="cards-grid">
                   {visiblePlayingMatches.map((match) => (
                     <div 
@@ -446,7 +461,7 @@ const Lobby = () => {
                     </div>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
           </>
         )}
@@ -627,16 +642,21 @@ const Lobby = () => {
           </div>
         )}
 
-        {/* SAĞ ALT FAB BUTON */}
-        {activeMenu === 'LOBBY' && (
-          <button className="fab-button" onClick={() => setShowModal(true)}>
-            <span>+</span> İDDİA OLUŞTUR
-          </button>
-        )}
+        </div>
+      </main>
 
-        {/* =========================================
-            İDDİA OLUŞTUR MODALI (ULTRA GLASSY)
-        ========================================== */}
+      <Footer />
+
+      {/* Mobile CTA */}
+      {activeMenu === 'LOBBY' && (
+        <button className="fab-button" onClick={() => setShowModal(true)} type="button">
+          <span aria-hidden="true">+</span> İDDİA OLUŞTUR
+        </button>
+      )}
+
+      {/* =========================================
+          İDDİA OLUŞTUR MODALI (ULTRA GLASSY)
+      ========================================== */}
         {showModal && (
           <div className="modal-overlay">
             <div className="create-modal">
@@ -736,7 +756,6 @@ const Lobby = () => {
           </div>
         )}
 
-      </main>
     </div>
   );
 };
