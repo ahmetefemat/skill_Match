@@ -210,3 +210,41 @@
     max-width: 200px;
   }
 }
+/* Ana Sayfaya Dön Butonu Stili */
+.appNavbar-backLink {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: rgba(255, 255, 255, 0.5); /* Hafif sönük beyaz */
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-right: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.back-arrow {
+  font-size: 1rem;
+  transition: transform 0.25s ease;
+}
+
+/* Hover Efektleri */
+.appNavbar-backLink:hover {
+  color: #26C6DA; /* SkillMatch Turkuazı */
+  background: rgba(38, 198, 218, 0.08);
+  border-color: rgba(38, 198, 218, 0.3);
+  box-shadow: 0 0 15px rgba(38, 198, 218, 0.1);
+}
+
+.appNavbar-backLink:hover .back-arrow {
+  transform: translateX(-3px); /* Ok işareti hafif sola kayar, canlı hissettirir */
+}
+
+/* Aktif basılma efekti */
+.appNavbar-backLink:active {
+  transform: scale(0.96);
+}

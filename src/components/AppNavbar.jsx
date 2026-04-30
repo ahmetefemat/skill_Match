@@ -67,11 +67,17 @@ export default function AppNavbar({ balance, username, avatarUrl }) {
         </nav>
 
         <div className="appNavbar-right">
+          {/* ANA SAYFAYA DÖN BUTONU - TERTEMİZ HALİ */}
+          <Link to="/" className="appNavbar-backLink">
+            <span className="back-arrow">←</span> Ana Sayfa
+          </Link>
+
           <div className="appNavbar-balancePill" aria-label="Wallet balance">
             <span className="appNavbar-balanceLabel">Bakiye</span>
             <span className="appNavbar-balanceValue">{balanceText}</span>
           </div>
-
+          
+          {/* ... profil kısmı aynı kalıyor */}
           {activePath === "/profile" ? (
             <div className="appNavbar-user isActive" aria-label="User profile">
               <div className="appNavbar-avatar" aria-hidden="true">

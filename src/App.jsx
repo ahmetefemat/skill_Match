@@ -35,17 +35,17 @@ function AppContent() {
   return (
     <Router>
       <Routes>
-        {/* Root: Landing page is the site's main entry */}
+        {/* Root: Landing sayfası sitenin ana giriş kapısı */}
         <Route path="/" element={<Landing />} />
         <Route path="/landing" element={<Landing />} />
 
-        {/* Login moved to explicit path */}
+        {/* Login: Kullanıcı giriş yapmışsa artık Lobiye değil, Ana Sayfaya (Landing) gitsin */}
         <Route
           path="/login"
-          element={user ? <Navigate to="/lobby" /> : <Login />}
+          element={user ? <Navigate to="/" /> : <Login />}
         />
 
-        {/* Hayrani'nin Lobisi - Artık Korumalı! */}
+        {/* Hayrani'nin Lobisi - Korumalı */}
         <Route 
           path="/lobby" 
           element={
@@ -55,7 +55,7 @@ function AppContent() {
           } 
         />
 
-        {/* Dashboard - Korumalı sayfa */}
+        {/* Dashboard - Korumalı */}
         <Route 
           path="/dashboard" 
           element={
@@ -65,7 +65,7 @@ function AppContent() {
           } 
         />
 
-        {/* Profile - Korumalı sayfa */}
+        {/* Profile - Korumalı */}
         <Route 
           path="/profile" 
           element={
@@ -75,7 +75,7 @@ function AppContent() {
           } 
         />
 
-        {/* Match detail - Korumalı sayfa */}
+        {/* Match detail - Korumalı */}
         <Route
           path="/match/:matchId"
           element={
@@ -85,7 +85,7 @@ function AppContent() {
           }
         />
 
-        {/* Test Dashboard - Korumalı sayfa */}
+        {/* Test Dashboard - Korumalı */}
         <Route 
           path="/test-dashboard" 
           element={
@@ -95,14 +95,13 @@ function AppContent() {
           } 
         />
 
-        {/* Yanlış yolları ana sayfaya yönlendir */}
+        {/* Tanımsız yolları her zaman ana sayfaya (Landing) döndür */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );
 }
 
-// ANA UYGULAMA (Tüm sistemi sarmalayan kısım)
 export default function App() {
   return (
     <AuthProvider>
