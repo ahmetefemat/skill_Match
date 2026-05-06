@@ -10,7 +10,10 @@ import { createMatch, listenToActiveMatches, listenToPlayingMatches, joinMatch }
 import { logoutUser } from "../services/authService";
 import Footer from "../components/Footer.jsx";
 import AppNavbar from "../components/AppNavbar.jsx";
-
+// src/assets/landing klasöründen oyun ikonlarını çekiyoruz
+import lolIcon from "../assets/landing/lol-icon.png";
+import valoIcon from "../assets/landing/valorant-icon.png";
+import cs2Icon from "../assets/landing/cs2-icon.png";
 const Lobby = () => {
   // AUTH VE USER DATA
   const { loading: authLoading } = useAuth();
@@ -39,6 +42,7 @@ const Lobby = () => {
   const [selectedTarget, setSelectedTarget] = useState('');
   const [betAmount, setBetAmount] = useState(100);
   const [isCreatingMatch, setIsCreatingMatch] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   // OYUNLARA GÖRE DİNAMİK HEDEFLER
   const targets = {
@@ -163,12 +167,11 @@ const Lobby = () => {
   };
 
   const getGameIcon = (gameName) => {
-    if (gameName === 'LoL') return '🧙‍♂️';
-    if (gameName === 'Valorant') return '🔫';
-    if (gameName === 'CS:GO') return '💣';
-    return '🎮';
-  };
-
+    if (gameName === 'LoL') return <img src={lolIcon} alt="LoL" style={{ width: '20px', height: '20px' }} />;
+    if (gameName === 'Valorant') return <img src={valoIcon} alt="Valorant" style={{ width: '20px', height: '20px' }} />;
+    if (gameName === 'CS:GO' || gameName === 'CS2') return <img src={cs2Icon} alt="CS" style={{ width: '20px', height: '20px' }} />;
+    return '🎮'; // Varsayılan için istersen buraya da bir default icon koyabilirsin
+};
   // BAKIYE GÜNCELLE
   const refreshBalance = async () => {
     if (user) {
@@ -339,10 +342,10 @@ const Lobby = () => {
                     onClick={() => setActiveFilter(f.value)}
                     className={`lobby-filterPill ${activeFilter === f.value ? "isActive" : ""}`}
                   >
-                    {f.value === "LoL" && <span aria-hidden="true">🧙‍♂️</span>}
-                    {f.value === "Valorant" && <span aria-hidden="true">🔫</span>}
-                    {f.value === "CS:GO" && <span aria-hidden="true">💣</span>}
-                    {f.label}
+                   {f.value === "LoL" && <img src={lolIcon} alt="LoL" style={{ width: '20px', height: '20px', objectFit: 'contain' }} aria-hidden="true" />}
+{f.value === "Valorant" && <img src={valoIcon} alt="Valorant" style={{ width: '20px', height: '20px', objectFit: 'contain' }} aria-hidden="true" />}
+{f.value === "CS:GO" && <img src={cs2Icon} alt="CS:GO" style={{ width: '20px', height: '20px', objectFit: 'contain' }} aria-hidden="true" />}
+{f.label}
                   </button>
                 ))}
               </div>
@@ -592,22 +595,31 @@ const Lobby = () => {
               </div>
 
               <div className="settings-card linked-accounts">
-                <h3 className="section-subtitle">Bağlı Hesaplar</h3>
-                <div className="account-list">
-                  <div className="account-item">
-                    <div className="acc-info"><span>🔫</span> <div><h4>Valorant</h4><span className="acc-status disconnected">Hesap Bağlı Değil</span></div></div>
-                    <button className="btn-primary-small">Bağla</button>
-                  </div>
-                  <div className="account-item">
-                    <div className="acc-info"><span>🧙‍♂️</span> <div><h4>LoL</h4><span className="acc-status disconnected">Hesap Bağlı Değil</span></div></div>
-                    <button className="btn-primary-small">Bağla</button>
-                  </div>
-                  <div className="account-item">
-                    <div className="acc-info"><span>💣</span> <div><h4>CS:GO</h4><span className="acc-status disconnected">Hesap Bağlı Değil</span></div></div>
-                    <button className="btn-primary-small">Bağla</button>
-                  </div>
-                </div>
-              </div>
+    <h3 className="section-subtitle">Bağlı Hesaplar</h3>
+    <div className="account-list">
+        <div className="account-item">
+            <div className="acc-info">
+                <img src={valoIcon} alt="Valorant" style={{ width: '24px', height: '24px' }} /> 
+                <div><h4>Valorant</h4><span className="acc-status disconnected">Hesap Bağlı Değil</span></div>
+            </div>
+            <button className="btn-primary-small">Bağla</button>
+        </div>
+        <div className="account-item">
+            <div className="acc-info">
+                <img src={lolIcon} alt="LoL" style={{ width: '24px', height: '24px' }} /> 
+                <div><h4>LoL</h4><span className="acc-status disconnected">Hesap Bağlı Değil</span></div>
+            </div>
+            <button className="btn-primary-small">Bağla</button>
+        </div>
+        <div className="account-item">
+            <div className="acc-info">
+                <img src={cs2Icon} alt="CS:GO" style={{ width: '24px', height: '24px' }} /> 
+                <div><h4>CS:GO</h4><span className="acc-status disconnected">Hesap Bağlı Değil</span></div>
+            </div>
+            <button className="btn-primary-small">Bağla</button>
+        </div>
+    </div>
+</div>
 
               <div className="settings-card" style={{gridColumn: '1 / -1', borderTop: '2px solid rgba(255, 255, 255, 0.1)'}}>
                 <h3 className="section-subtitle" style={{marginBottom: '20px'}}>Hesap</h3>
@@ -663,23 +675,45 @@ const Lobby = () => {
               <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
               <h2 className="modal-title">Yeni İddia Oluştur</h2>
               
-              <div className="form-group">
-                <label className="form-label">Oyun Seç</label>
-                <div className="game-selector">
-                  <button className={`game-opt ${selectedGame === 'LoL' ? 'active' : ''}`} onClick={() => setSelectedGame('LoL')}>🧙‍♂️ LoL</button>
-                  <button className={`game-opt ${selectedGame === 'Valorant' ? 'active' : ''}`} onClick={() => setSelectedGame('Valorant')}>🔫 Valorant</button>
-                  <button className={`game-opt ${selectedGame === 'CS:GO' ? 'active' : ''}`} onClick={() => setSelectedGame('CS:GO')}>💣 CS:GO</button>
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">İddia Hedefi</label>
-                <select className="glass-select" value={selectedTarget} onChange={(e) => setSelectedTarget(e.target.value)}>
-                  {targets[selectedGame].map(t => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-              </div>
+              <div className="game-options" style={{ display: 'flex', gap: '10px' }}>
+    <button className={`game-opt ${selectedGame === 'LoL' ? 'active' : ''}`} onClick={() => setSelectedGame('LoL')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <img src={lolIcon} alt="LoL" style={{ width: '18px', height: '18px' }} /> LoL
+    </button>
+    <button className={`game-opt ${selectedGame === 'Valorant' ? 'active' : ''}`} onClick={() => setSelectedGame('Valorant')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <img src={valoIcon} alt="Valorant" style={{ width: '18px', height: '18px' }} /> Valorant
+    </button>
+    <button className={`game-opt ${selectedGame === 'CS:GO' ? 'active' : ''}`} onClick={() => setSelectedGame('CS:GO')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <img src={cs2Icon} alt="CS:GO" style={{ width: '18px', height: '18px' }} /> CS:GO
+    </button>
+</div>
+           <div className="form-group">
+  <label className="form-label">İddia Hedefi</label>
+  <div className="custom-select-container">
+    <div 
+      className={`custom-select-header ${isOpen ? 'open' : ''}`} 
+      onClick={() => setIsOpen(!isOpen)}
+    >
+      {selectedTarget}
+      <span className="arrow">{isOpen ? '▲' : '▼'}</span>
+    </div>
+    
+    {isOpen && (
+      <ul className="custom-select-list">
+        {targets[selectedGame].map(t => (
+          <li 
+            key={t} 
+            onClick={() => {
+              setSelectedTarget(t);
+              setIsOpen(false);
+            }}
+          >
+            {t}
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</div>
 
               <div className="form-group">
                 <label className="form-label">Bahis Miktarı (Kredi)</label>

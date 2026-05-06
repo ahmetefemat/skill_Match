@@ -931,4 +931,109 @@ input:checked + .slider:before { transform: translateX(22px); }
 @media (max-width: 1100px) {
   .settings-grid { grid-template-columns: 1fr; }
   .linked-accounts, .security-settings { grid-column: 1 / 2; }
+}/* Number input içindeki çirkin okları gizler */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+/* Bahis Miktarı (100) Kutusunu Menüyle Aynı Siyah Yapıyoruz */
+input[type="number"] {
+  background-color: #08080a; /* Üstteki menüyle aynı zifiri siyah */
+  border: 1px solid #1a1a24; /* Aynı ince çerçeve */
+  color: white;
+  padding: 14px 16px; /* Yükseklikleri milimetrik aynı olsun diye */
+  border-radius: 8px;
+  width: 100%;
+  font-size: 16px;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+/* Tıklanınca Turkuaz Parlama Efekti */
+input[type="number"]:focus {
+  border-color: #26C6DA;
+  box-shadow: 0 0 10px rgba(38, 198, 218, 0.15);
+  outline: none;
+}
+/* ÖZEL AÇILIR MENÜ STİLLERİ */
+.custom-select-container {
+  position: relative;
+  width: 100%;
+  font-family: inherit;
+}
+
+.custom-select-header {
+  background-color: #1a1a24; /* Sendeki input arka plan rengine göre ayarla */
+  border: 1px solid #2a2a36;
+  padding: 12px 16px;
+  border-radius: 8px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.custom-select-header.open {
+  border-color: #26C6DA;
+}
+
+/* Açılan Liste Stili */
+/* ÖZEL AÇILIR MENÜ STİLLERİ - GÜNCELLENDİ (Aşağıdaki input ile birebir aynı) */
+.custom-select-container {
+  position: relative;
+  width: 100%;
+  font-family: inherit;
+}
+
+.custom-select-header {
+  background-color: #08080a; /* Bahis miktarı kutusunun o koyu/siyah arka planı */
+  border: 1px solid #1a1a24; /* İnce ve hafif çerçeve */
+  padding: 14px 16px; /* Aşağıdaki input ile yüksekliğinin aynı olması için paddingi 14px yaptık */
+  border-radius: 8px; /* Aynı köşe yuvarlatması */
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Tıklanınca veya üzerine gelince aşağıdaki kutu gibi parlasın */
+.custom-select-header:hover,
+.custom-select-header.open {
+  border-color: #26C6DA;
+  box-shadow: 0 0 10px rgba(38, 198, 218, 0.15);
+}
+
+/* Açılan Liste Stili - Orayı da ana renge uyduralım */
+.custom-select-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: #08080a; /* Uyumlu koyu renk */
+  border: 1px solid #1a1a24;
+  border-radius: 8px;
+  margin-top: 6px;
+  padding: 0;
+  list-style: none;
+  z-index: 100;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8); /* Menü açılınca arkaya derinlik versin */
+}
+
+.custom-select-list li {
+  padding: 12px 16px;
+  color: #a0a0b0;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.custom-select-list li:hover {
+  background-color: rgba(38, 198, 218, 0.1);
+  color: #26C6DA;
 }

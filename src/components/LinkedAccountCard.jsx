@@ -1,4 +1,6 @@
 import React from 'react';
+import riotIcon from "../assets/landing/riot.png"; 
+import steamIcon from "../assets/landing/steam.png";
 
 /**
  * LinkedAccountCard Component
@@ -17,7 +19,17 @@ const LinkedAccountCard = ({ account, onManage }) => {
     <div className={`linked-account-card account-${getStatusColor(account.connected)}`}>
       <div className="account-header">
         <div className="account-icon-section">
-          <span className="account-icon">{account.icon}</span>
+          {/* İKON DEĞİŞİKLİĞİNİ BURAYA YAPTIK */}
+          <span className="account-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {account.platform === "Riot Games" ? (
+              <img src={riotIcon} alt="Riot Games" style={{ width: '35px', height: '35px', objectFit: 'contain' }} />
+            ) : account.platform === "Steam" ? (
+              <img src={steamIcon} alt="Steam" style={{ width: '35px', height: '35px', objectFit: 'contain' }} />
+            ) : (
+              account.icon /* Eğer başka bir platform eklenirse varsayılan ikon/yazı çıksın diye */
+            )}
+          </span>
+          
           <div className="account-info">
             <h3 className="account-platform">{account.platform}</h3>
             <p className="account-username">{account.username}</p>
