@@ -1,5 +1,5 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import "./Landing.css";
 
@@ -231,31 +231,17 @@ const stats = [
 ];
 
 export default function Landing() {
-    const { user, logout, logoutUser } = useAuth(); 
-    const navigate = useNavigate();
+    const { user, logout } = useAuth();
 
     const handleLogout = async (e) => {
         e.preventDefault();
         
         try {
-            // Mevcut olan çıkış fonksiyonunu tetikle
-            if (logoutUser) await logoutUser();
-            else if (logout) await logout();
+            if (logout) {
+                await logout();
+            }
         } catch (error) {
             console.error("Çıkış işlemi sırasında hata:", error);
-        } finally {
-            // Garanti Çıkış Protokolü: Önbellek ve çerezleri temizle
-            localStorage.clear();
-            sessionStorage.clear();
-            
-            document.cookie.split(";").forEach((c) => {
-                document.cookie = c
-                    .replace(/^ +/, "")
-                    .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-            });
-
-            // Arayüzü güncellemek için sayfayı yenile
-            window.location.reload(); 
         }
     };
 	return (
@@ -307,32 +293,28 @@ export default function Landing() {
 					<div className="landing-navActions">
                         {user ? (
                             /* KULLANICI GİRİŞ YAPMIŞSA LOBİ BUTONU VE USER CONTROLS */
-                            <div className="user-controls" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <div className="landing-user-controls">
                                 
+                                {/* WELCOME MESSAGE */}
+                                <div className="landing-welcome-badge">
+                                    <span className="landing-welcome-greeting">Hoşgeldin,</span>
+                                    <span className="landing-welcome-name">
+                                        {user.displayName || (user.email ? user.email.split('@')[0] : 'Şampiyon')}
+                                    </span>
+                                </div>
+
                                 {/* LOBİYE GİT BUTONU */}
                                 <Link 
                                     to="/lobby" 
                                     className="landing-btn landing-btn--solid"
-                                    style={{ 
-                                        padding: '0.6rem 1.2rem', 
-                                        fontSize: '0.9rem',
-                                        background: 'linear-gradient(135deg, #26C6DA 0%, #00acc1 100%)',
-                                        boxShadow: '0 4px 15px rgba(38, 198, 218, 0.3)'
-                                    }}
                                 >
                                     Arena'ya Gir
                                 </Link>
-
-                                <span className="welcome-text" style={{ color: '#9CA3AF', fontSize: '0.95rem', fontWeight: '500', marginLeft: '0.5rem' }}>
-                                    Hoşgeldin, <span style={{ color: '#26C6DA', fontWeight: '800' }}>
-                                        {user.displayName || (user.email ? user.email.split('@')[0] : 'Şampiyon')}
-                                    </span>
-                                </span>
                                 
+                                {/* ÇIKIŞ BUTONU */}
                                 <button 
                                     onClick={handleLogout} 
-                                    className="landing-btn landing-btn--ghost" 
-                                    style={{ color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.3)', padding: '0.6rem 1rem' }}
+                                    className="landing-btn landing-btn--logout" 
                                 >
                                     Çıkış
                                 </button>

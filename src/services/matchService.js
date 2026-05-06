@@ -252,17 +252,13 @@ export const getUserMatchHistory = async (userId, limitCount = 10) => {
       getDocs(
         query(
           collection(db, "matches"),
-          where("olusturan_id", "==", userId),
-          orderBy("guncellenme_tarihi", "desc"),
-          limit(limitCount)
+          where("olusturan_id", "==", userId)
         )
       ),
       getDocs(
         query(
           collection(db, "matches"),
-          where("katilan_id", "==", userId),
-          orderBy("guncellenme_tarihi", "desc"),
-          limit(limitCount)
+          where("katilan_id", "==", userId)
         )
       ),
     ]);
@@ -279,7 +275,15 @@ export const getUserMatchHistory = async (userId, limitCount = 10) => {
       }
     });
 
-    return Array.from(matchesMap.values());
+    // Client-side sorting ve limiting
+    const matches = Array.from(matchesMap.values());
+    const sorted = matches.sort((a, b) => {
+      const dateA = a.guncellenme_tarihi?.toMillis?.() || a.guncellenme_tarihi?.seconds * 1000 || 0;
+      const dateB = b.guncellenme_tarihi?.toMillis?.() || b.guncellenme_tarihi?.seconds * 1000 || 0;
+      return dateB - dateA; // descending
+    });
+
+    return sorted.slice(0, limitCount);
   } catch (error) {
     console.error("Kullanici mac gecmisi sorgusu hatasi:", error);
     throw error;
