@@ -2,7 +2,7 @@
   "indexes": [
     {
       "collectionGroup": "matches",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
         {
           "fieldPath": "durum",
@@ -16,7 +16,7 @@
     },
     {
       "collectionGroup": "matches",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
         {
           "fieldPath": "durum",
@@ -30,7 +30,7 @@
     },
     {
       "collectionGroup": "transactions",
-      "queryScope": "Collection",
+      "queryScope": "COLLECTION",
       "fields": [
         {
           "fieldPath": "user_id",
@@ -38,6 +38,34 @@
         },
         {
           "fieldPath": "tarih",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "matches",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "olusturan_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "guncellenme_tarihi",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "matches",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "katilan_id",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "guncellenme_tarihi",
           "order": "DESCENDING"
         }
       ]
@@ -50,11 +78,11 @@
       "indexes": [
         {
           "order": "ASCENDING",
-          "queryScope": "Collection"
+          "queryScope": "COLLECTION"
         },
         {
           "order": "DESCENDING",
-          "queryScope": "Collection"
+          "queryScope": "COLLECTION"
         }
       ]
     }

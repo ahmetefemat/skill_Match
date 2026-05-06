@@ -9,15 +9,18 @@ import {
   buildUserProfile,
   getUserById,
   getUsersByIds,
-  resolveStatsOverrides,
 } from "../services/userService";
 import {
   buildMatchStats,
   buildWalletSummary,
+  buildPerformanceTrend,
   mapMatchesForTable,
   mapTransactions,
 } from "../services/statsService";
 import StatCard from "../components/StatCard";
+import ChartCard from "../components/ChartCard";
+import WinLossChart from "../components/WinLossChart";
+import PerformanceChart from "../components/PerformanceChart";
 import ProfileHeader from "../components/ProfileHeader";
 import LinkedAccountCard from "../components/LinkedAccountCard";
 import TransactionItem from "../components/TransactionItem";
@@ -43,6 +46,7 @@ const Profile = () => {
   const [profileLoading, setProfileLoading] = useState(true);
   const [userProfile, setUserProfile] = useState(buildUserProfile({}, null, 0));
   const [userStats, setUserStats] = useState(buildMatchStats([], null));
+  const [chartData, setChartData] = useState({ labels: [], data: [] });
   const [linkedAccounts, setLinkedAccounts] = useState([]);
   const [walletData, setWalletData] = useState({
     currentBalance: 0,
@@ -112,8 +116,8 @@ const Profile = () => {
       setUserProfile(profile);
       setLinkedAccounts(buildLinkedAccounts(mergedUserData));
 
-      const statsOverrides = resolveStatsOverrides(mergedUserData);
-      setUserStats(buildMatchStats(matchData, user.uid, statsOverrides));
+      setUserStats(buildMatchStats(matchData, user.uid));
+      setChartData(buildPerformanceTrend(matchData));
       setRecentMatches(mapMatchesForTable(matchData, user.uid, opponentMap));
 
       setTransactions(mapTransactions(transactionData, effectiveBalance || 0));
@@ -250,6 +254,11 @@ const Profile = () => {
     }
   };
 
+  const handleRefreshStats = () => {
+    console.log("Refresh Stats clicked");
+    loadProfileData();
+  };
+
   // ============================================
   // RENDER
   // ============================================
@@ -320,6 +329,101 @@ const Profile = () => {
           />
         </div>
       </section>
+
+      {/* KPI STRIP SECTION */}
+      <div className="dashboard-kpiStrip">
+        <div className="dashboard-kpiCard">
+          <div className="dashboard-kpiLabel">Completed Matches</div>
+          <div className="dashboard-kpiValue">{userStats.totalMatches}</div>
+          <div className="dashboard-kpiHint">Based on match history</div>
+        </div>
+
+        <div className="dashboard-kpiCard">
+          <div className="dashboard-kpiLabel">Success Rate</div>
+          <div className="dashboard-kpiValue">{userStats.winRate}%</div>
+          <div className="dashboard-kpiHint">Wins vs losses</div>
+        </div>
+
+        <div className="dashboard-kpiCard">
+          <div className="dashboard-kpiLabel">Current Balance</div>
+          <div className="dashboard-kpiValue">₺{walletData.currentBalance.toLocaleString()}</div>
+          <div className="dashboard-kpiHint">Wallet balance</div>
+        </div>
+
+        <div className="dashboard-kpiCard">
+          <div className="dashboard-kpiLabel">Total Earned</div>
+          <div className="dashboard-kpiValue">₺{walletData.totalEarnings.toLocaleString()}</div>
+          <div className="dashboard-kpiHint">Match earnings</div>
+        </div>
+
+        <div className="dashboard-kpiCard">
+          <div className="dashboard-kpiLabel">Total Spent</div>
+          <div className="dashboard-kpiValue">₺{walletData.totalWithdrawals.toLocaleString()}</div>
+          <div className="dashboard-kpiHint">Match costs</div>
+        </div>
+      </div>
+
+      {/* CHARTS SECTION */}
+      <div className="charts-section">
+        <div className="chart-col chart-col--small">
+          <ChartCard title="Match Statistics">
+            {recentMatches.length > 0 ? (
+              <WinLossChart
+                wins={userStats.wins}
+                losses={userStats.losses}
+                title="Win/Loss Ratio"
+              />
+            ) : (
+              <div className="dashboard-emptyState">
+                <div className="dashboard-emptyIcon" aria-hidden="true">📊</div>
+                <div className="dashboard-emptyTitle">Henüz istatistik yok</div>
+                <div className="dashboard-emptyDesc">İlk iddianı oyna, performans grafikleri burada görünsün.</div>
+              </div>
+            )}
+          </ChartCard>
+        </div>
+
+        <div className="chart-col chart-col--large">
+          <ChartCard title="Performance Trend">
+            {chartData?.labels?.length > 0 && chartData?.data?.length > 0 ? (
+              <PerformanceChart
+                data={chartData.data}
+                labels={chartData.labels}
+                title="Score Progression"
+                yAxisLabel="Score"
+                lineColor="rgba(0, 245, 212, 1)"
+                fillColor="rgba(0, 245, 212, 0.1)"
+              />
+            ) : (
+              <div className="dashboard-emptyState">
+                <div className="dashboard-emptyIcon" aria-hidden="true">📈</div>
+                <div className="dashboard-emptyTitle">Trend verisi hazır değil</div>
+                <div className="dashboard-emptyDesc">Maç geçmişin arttıkça performans trendin otomatik oluşacak.</div>
+              </div>
+            )}
+          </ChartCard>
+        </div>
+      </div>
+
+      {/* REFRESH BUTTON */}
+      <div className="recent-matches-section">
+        <div className="recent-matches-header">
+          <h3 className="section-title">Recent Matches</h3>
+          <button
+            className="btn-refresh"
+            onClick={handleRefreshStats}
+            title="Refresh match history"
+            type="button"
+          >
+            🔄 Refresh
+          </button>
+        </div>
+        <RecentMatchesTable
+          matches={recentMatches}
+          onMatchClick={(match) => handleViewMatchDetails(match)}
+          onViewDetails={handleViewMatchDetails}
+        />
+      </div>
 
       {/* LINKED ACCOUNTS SECTION */}
       <section className="profile-section">
@@ -393,17 +497,6 @@ const Profile = () => {
             <TransactionItem key={transaction.id} transaction={transaction} />
           ))}
         </div>
-      </section>
-
-      {/* RECENT MATCHES SECTION */}
-      <section className="profile-section">
-        <div className="section-header">
-          <h2 className="section-title">Recent Matches</h2>
-        </div>
-        <RecentMatchesTable
-          matches={recentMatches.slice(0, 5)}
-          onViewDetails={handleViewMatchDetails}
-        />
       </section>
 
       {/* ACHIEVEMENTS SECTION */}

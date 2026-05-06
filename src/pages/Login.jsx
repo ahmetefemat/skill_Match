@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { registerUser, loginUser } from "../services/authService";
+import { registerUser, loginUser, translateFirebaseError } from "../services/authService";
 import './Login.css';
 
 // Görsellerimiz
@@ -21,7 +21,27 @@ const Login = () => {
   const [passwordConfirm, setPasswordConfirm] = useState(''); // Şifre Tekrar
   const [birthDate, setBirthDate] = useState(''); // Doğum Tarihi
   const [username, setUsername] = useState(''); 
-  const [error, setError] = useState(''); 
+  const [error, setError] = useState('');
+
+  // Firebase'in düzgün yüklendiğini kontrol et
+  useEffect(() => {
+    try {
+      // Firebase modülünü test et
+      const testFirebase = async () => {
+        const { auth } = await import("../services/firebase.js");
+        if (!auth) {
+          console.error("⚠️ Firebase Auth başlatılamadı!");
+          setError("Sistem yapılandırması hatalı. Lütfen yöneticiyle iletişim kurun.");
+        } else {
+          console.log("✅ Firebase Auth başarıyla yüklendi");
+        }
+      };
+      testFirebase();
+    } catch (err) {
+      console.error("Firebase yükleme hatası:", err);
+      setError("Sistem yapılandırması hatalı.");
+    }
+  }, []); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -34,21 +54,53 @@ const Login = () => {
           setError("Şifreler birbiriyle eşleşmiyor!");
           return;
         }
+
+        // Şifre uzunluğu kontrolü
+        if (password.length < 6) {
+          setError("Şifre en az 6 karakter olmalıdır!");
+          return;
+        }
+
+        if (!username.trim()) {
+          setError("Kullanıcı adı boş olamaz!");
+          return;
+        }
         
-        // Kayıt işlemi (Ahmet Efe'nin servisi)
-        await registerUser(email, password, username);
+        // Kayıt işlemi - username'i riot_id olarak da geç
+        await registerUser(email, password, username, username);
         
-        // BAŞARILI: Lobi yerine Landing (Ana Sayfa) rotasına fırlat
+        // BAŞARILI: Landing (Ana Sayfa) rotasına fırlat
         navigate('/'); 
       } else {
-        // Giriş işlemi (Ahmet Efe'nin servisi)
+        // Email ve şifre kontrolü
+        if (!email.trim()) {
+          setError("E-posta adresini giriniz!");
+          return;
+        }
+
+        if (!password.trim()) {
+          setError("Şifrenizi giriniz!");
+          return;
+        }
+
+        // Giriş işlemi
         await loginUser(email, password);
         
-        // BAŞARILI: Lobi yerine Landing (Ana Sayfa) rotasına fırlat
+        // BAŞARILI: Landing (Ana Sayfa) rotasına fırlat
         navigate('/'); 
       }
     } catch (err) {
-      setError(err.message);
+      // Usar a função de tradução de erros
+      const userMessage = translateFirebaseError(err);
+      
+      console.error("❌ Erro de autenticação:", {
+        code: err.code,
+        message: err.message,
+        userMessage: userMessage
+      });
+      console.error("📋 Erro completo:", err);
+      
+      setError(userMessage);
     }
   };
 

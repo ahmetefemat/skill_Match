@@ -36,13 +36,13 @@ function AppContent() {
     <Router>
       <Routes>
         {/* Root: Landing sayfası sitenin ana giriş kapısı */}
-        <Route path="/" element={<Landing />} />
-        <Route path="/landing" element={<Landing />} />
+        <Route path="/" element={<div className="page-wrapper"><Landing /></div>} />
+        <Route path="/landing" element={<div className="page-wrapper"><Landing /></div>} />
 
         {/* Login: Kullanıcı giriş yapmışsa artık Lobiye değil, Ana Sayfaya (Landing) gitsin */}
         <Route
           path="/login"
-          element={user ? <Navigate to="/" /> : <Login />}
+          element={user ? <Navigate to="/" /> : <div className="page-wrapper"><Login /></div>}
         />
 
         {/* Hayrani'nin Lobisi - Korumalı */}
@@ -50,7 +50,7 @@ function AppContent() {
           path="/lobby" 
           element={
             <PrivateRoute>
-              <Lobby />
+              <div className="page-wrapper"><Lobby /></div>
             </PrivateRoute>
           } 
         />
@@ -60,7 +60,7 @@ function AppContent() {
           path="/dashboard" 
           element={
             <PrivateRoute>
-              <Dashboard />
+              <div className="page-wrapper"><Dashboard /></div>
             </PrivateRoute>
           } 
         />
@@ -70,7 +70,7 @@ function AppContent() {
           path="/profile" 
           element={
             <PrivateRoute>
-              <Profile />
+              <div className="page-wrapper"><Profile /></div>
             </PrivateRoute>
           } 
         />
@@ -80,7 +80,7 @@ function AppContent() {
           path="/match/:matchId"
           element={
             <PrivateRoute>
-              <Match />
+              <div className="page-wrapper"><Match /></div>
             </PrivateRoute>
           }
         />
@@ -90,7 +90,7 @@ function AppContent() {
           path="/test-dashboard" 
           element={
             <PrivateRoute>
-              <TestDashboard />
+              <div className="page-wrapper"><TestDashboard /></div>
             </PrivateRoute>
           } 
         />
