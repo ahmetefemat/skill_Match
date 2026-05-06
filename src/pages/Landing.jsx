@@ -1,6 +1,7 @@
-import { Link } from "react-router-dom";
+import React from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../hooks/useAuth.js";
 import "./Landing.css";
-
 
 import lolImg from "../assets/landing/lol.png";
 import valorantImg from "../assets/landing/valorant.png";
@@ -230,6 +231,33 @@ const stats = [
 ];
 
 export default function Landing() {
+    const { user, logout, logoutUser } = useAuth(); 
+    const navigate = useNavigate();
+
+    const handleLogout = async (e) => {
+        e.preventDefault();
+        
+        try {
+            // Mevcut olan çıkış fonksiyonunu tetikle
+            if (logoutUser) await logoutUser();
+            else if (logout) await logout();
+        } catch (error) {
+            console.error("Çıkış işlemi sırasında hata:", error);
+        } finally {
+            // Garanti Çıkış Protokolü: Önbellek ve çerezleri temizle
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            document.cookie.split(";").forEach((c) => {
+                document.cookie = c
+                    .replace(/^ +/, "")
+                    .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+            });
+
+            // Arayüzü güncellemek için sayfayı yenile
+            window.location.reload(); 
+        }
+    };
 	return (
 		<div className="landing">
 			{/* Deep layered background */}
@@ -241,40 +269,88 @@ export default function Landing() {
 			</div>
 
 			{/* 1) Navbar */}
-			<header className="landing-navbar">
-				<div className="landing-container landing-navbarInner">
-					<div className="landing-brand">
-						<img
-							className="landing-brandMark"
-							src={logo}
-							alt="SkillMatch Logo"
-							style={{ width: 52, height: "auto", maxHeight: 52, objectFit: "contain" }}
-						/>
-					</div>
+            <header className="landing-navbar">
+                <div className="landing-container landing-navbarInner">
+                    <div className="landing-brand" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
+                        <img
+                            className="landing-brandMark"
+                            src={logo}
+                            alt="SkillMatch Logo"
+                            style={{ width: 52, height: "auto", maxHeight: 52, objectFit: "contain" }}
+                        />
+                        {/* SKILLMATCH YAZISI */}
+                        <span style={{ 
+                            fontSize: '1.5rem', 
+                            fontWeight: '800', 
+                            letterSpacing: '-0.5px',
+                            fontFamily: 'sans-serif', // Projenin ana fontu neyse ona çekebilirsin
+                            userSelect: 'none'
+                        }}>
+                            <span style={{ color: '#FFFFFF' }}>Skill</span>
+                            <span style={{ color: '#26C6DA' }}>Match</span>
+                        </span>
+                    </div>
 
-					{/* TODO: Replace hash links with real routes (React Router) when ready */}
-					<nav className="landing-navLinks" aria-label="Primary">
-						<a className="landing-navLink" href="#games">
-							Nasıl Çalışır?
-						</a>
-						<a className="landing-navLink" href="#features">
-							Özellikler
-						</a>
-						<a className="landing-navLink" href="#footer">
-							Destek
-						</a>
-					</nav>
+                    {/* TODO: Replace hash links with real routes (React Router) when ready */}
+                    <nav className="landing-navLinks" aria-label="Primary">
+                        <a className="landing-navLink" href="#games">
+                            Nasıl Çalışır?
+                        </a>
+                        <a className="landing-navLink" href="#features">
+                            Özellikler
+                        </a>
+                        <a className="landing-navLink" href="#footer">
+                            Destek
+                        </a>
+                    </nav>
 
 					<div className="landing-navActions">
-						<Link className="landing-btn landing-btn--ghost" to="/login">
-							Giriş Yap
-						</Link>
-						<Link className="landing-btn landing-btn--solid" to="/login">
-							Hesap Oluştur
-						</Link>
-					</div>
-				</div>
-			</header>
+                        {user ? (
+                            /* KULLANICI GİRİŞ YAPMIŞSA LOBİ BUTONU VE USER CONTROLS */
+                            <div className="user-controls" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                
+                                {/* LOBİYE GİT BUTONU */}
+                                <Link 
+                                    to="/lobby" 
+                                    className="landing-btn landing-btn--solid"
+                                    style={{ 
+                                        padding: '0.6rem 1.2rem', 
+                                        fontSize: '0.9rem',
+                                        background: 'linear-gradient(135deg, #26C6DA 0%, #00acc1 100%)',
+                                        boxShadow: '0 4px 15px rgba(38, 198, 218, 0.3)'
+                                    }}
+                                >
+                                    Arena'ya Gir
+                                </Link>
+
+                                <span className="welcome-text" style={{ color: '#9CA3AF', fontSize: '0.95rem', fontWeight: '500', marginLeft: '0.5rem' }}>
+                                    Hoşgeldin, <span style={{ color: '#26C6DA', fontWeight: '800' }}>
+                                        {user.displayName || (user.email ? user.email.split('@')[0] : 'Şampiyon')}
+                                    </span>
+                                </span>
+                                
+                                <button 
+                                    onClick={handleLogout} 
+                                    className="landing-btn landing-btn--ghost" 
+                                    style={{ color: '#EF4444', borderColor: 'rgba(239, 68, 68, 0.3)', padding: '0.6rem 1rem' }}
+                                >
+                                    Çıkış
+                                </button>
+                            </div>
+                        ) : (
+                            /* GİRİŞ YAPMAMIŞSA NORMAL BUTONLAR */
+                            <>
+                                <Link className="landing-btn landing-btn--ghost" to="/login">
+                                    Giriş Yap
+                                </Link>
+                                <Link className="landing-btn landing-btn--solid" to="/login">
+                                    Hesap Oluştur
+                                </Link>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </header>
 
 			<main>
 				{/* 2) Hero */}

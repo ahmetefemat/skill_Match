@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { registerUser, loginUser } from "../services/authService";
 import './Login.css';
 
-// YENİ EKLENEN KISIM: Efsanevi görseli buraya çekiyoruz
+// Görsellerimiz
 import bgImage from '../assets/crossover-bg.jpg'; 
+import logo from '../assets/logo.svg';
+import riotIcon from '../assets/landing/riot.png'; 
+import steamIcon from '../assets/landing/steam.png'; 
 
 const Login = () => {
   const navigate = useNavigate();
@@ -32,12 +35,17 @@ const Login = () => {
           return;
         }
         
-        // AHMET İÇİN NOT: backend'e username ve birthDate de gönderilebilir.
+        // Kayıt işlemi (Ahmet Efe'nin servisi)
         await registerUser(email, password, username);
-        navigate('/lobby');
+        
+        // BAŞARILI: Lobi yerine Landing (Ana Sayfa) rotasına fırlat
+        navigate('/'); 
       } else {
+        // Giriş işlemi (Ahmet Efe'nin servisi)
         await loginUser(email, password);
-        navigate('/lobby');
+        
+        // BAŞARILI: Lobi yerine Landing (Ana Sayfa) rotasına fırlat
+        navigate('/'); 
       }
     } catch (err) {
       setError(err.message);
@@ -60,8 +68,8 @@ const Login = () => {
       {/* Merkezi Dar Kutu (Sağa Yaslı) */}
       <div className="glass-card">
         
-        <div className="brand-header">
-          <div className="logo-box"><span>S</span></div>
+      <div className="brand-header">
+          <img src={logo} alt="SkillMatch Logo" className="brand-logo" />
           <h1 className="brand-title">SkillMatch</h1>
         </div>
 
@@ -89,7 +97,7 @@ const Login = () => {
 
         <form onSubmit={handleSubmit}>
           
-          {/* ORTAK ALANLAR (Giriş ve Kayıt) */}
+          {/* HER ZAMAN GÖRÜNEN ORTAK ALANLAR */}
           <div className="input-group">
             <label className="input-label">E-posta Adresi</label>
             <input 
@@ -114,45 +122,44 @@ const Login = () => {
             />
           </div>
 
-          {/* SADECE KAYIT MODUNDA GÖRÜNECEK ALANLAR */}
-          {activeTab === 'register' && (
-            <>
-              <div className="input-group">
-                <label className="input-label">Şifre Tekrar</label>
-                <input 
-                  type="password" 
-                  required
-                  value={passwordConfirm}
-                  onChange={(e) => setPasswordConfirm(e.target.value)}
-                  className="neon-input"
-                  placeholder="••••••••"
-                />
-              </div>
+          {/* YAĞ GİBİ AÇILIP KAPANAN KAYIT ALANLARI */}
+          <div className={`register-fields-wrapper ${activeTab === 'register' ? 'is-open' : ''}`}>
+            {/* Wrapper içine ekstra div koymuyoruz, doğrudan inputlar */}
+            <div className="input-group">
+              <label className="input-label">Şifre Tekrar</label>
+              <input 
+                type="password" 
+                required={activeTab === 'register'}
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                className="neon-input"
+                placeholder="••••••••"
+              />
+            </div>
 
-              <div className="input-group">
-                <label className="input-label">Kullanıcı Adı (Riot/Steam ID)</label>
-                <input 
-                  type="text" 
-                  required
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="neon-input"
-                  placeholder="NickName#TR1"
-                />
-              </div>
+            <div className="input-group">
+              <label className="input-label">Kullanıcı Adı (Riot/Steam ID)</label>
+              <input 
+                type="text" 
+                required={activeTab === 'register'}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="neon-input"
+                placeholder="NickName#TR1"
+              />
+            </div>
 
-              <div className="input-group">
-                <label className="input-label">Doğum Tarihi</label>
-                <input 
-                  type="date" 
-                  required
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  className="neon-input"
-                />
-              </div>
-            </>
-          )}
+            <div className="input-group">
+              <label className="input-label">Doğum Tarihi</label>
+              <input 
+                type="date" 
+                required={activeTab === 'register'}
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                className="neon-input"
+              />
+            </div>
+          </div>
 
           <button type="submit" className="neon-btn">
             {activeTab === 'login' ? 'Giriş Yap' : 'Kayıt İşlemini Tamamla'}
@@ -165,19 +172,16 @@ const Login = () => {
         <div className="social-logins">
           
           <button type="button" className="social-btn">
-            <svg className="riot-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14.5v-9l6 4.5-6 4.5z"/>
-            </svg>
+            <img src={riotIcon} alt="Riot Games" className="social-img-icon" />
             Riot Games ile Giriş Yap
           </button>
 
           <button type="button" className="social-btn">
-            <svg className="steam-icon" viewBox="0 0 24 24">
-              <path d="M11.979 0C5.363 0 0 5.36 0 11.979c0 4.673 2.673 8.71 6.556 10.74l3.197-4.636c-.161-.318-.255-.678-.255-1.06 0-1.285 1.042-2.327 2.328-2.327.135 0 .267.012.396.034l3.397-4.93v-.45c0-2.348 1.905-4.253 4.253-4.253 2.348 0 4.253 1.905 4.253 4.253 0 2.348-1.905 4.253-4.253 4.253-1.63 0-3.04-.925-3.743-2.261l-5.11 1.488c.036.14.056.285.056.435 0 1.285-1.042 2.327-2.327 2.327-1.127 0-2.062-.8-2.278-1.874l-3.324 4.825C6.155 23.364 8.948 24 11.98 24 18.614 24 24 18.636 24 12c0-6.618-5.385-11.979-12.021-12z"/>
-            </svg>
+            <img src={steamIcon} alt="Steam" className="social-img-icon" />
             Steam ile Giriş Yap
           </button>
 
+          {/* Google şimdilik orijinal SVG'siyle kalabilir, en sorunsuz o çalışır */}
           <button type="button" className="social-btn">
             <svg className="google-icon" viewBox="0 0 24 24" fill="currentColor">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -188,6 +192,7 @@ const Login = () => {
             Google ile Giriş Yap
           </button>
 
+        
         </div>
       </div>
     </div>

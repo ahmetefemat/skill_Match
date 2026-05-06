@@ -65,51 +65,77 @@
     to { opacity: 1; transform: translateY(0); }
   }
   
-  /* --- 4. BAŞLIK VE SEKME DÜZENLERİ --- */
-  .brand-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 2rem;
-  }
+/* --- 4. BAŞLIK, LOGO VE SEKME DÜZENLERİ --- */
+.brand-header {
+  display: flex;
+  justify-content: center; /* İkisini tam ortaya hizalıyoruz */
+  align-items: center;
+  gap: 1rem; /* Logo ve yazının arasına şık bir boşluk */
+  margin-bottom: 2rem;
+}
+
+.brand-logo {
+  height: 45px; /* Yazıyla yan yana dengeli durması için 45px ideal */
+  width: auto;
+  object-fit: contain;
+  /* Logoya efsanevi neon parlama efektini veriyoruz */
+  filter: drop-shadow(0 0 12px rgba(38, 198, 218, 0.6));
+  animation: pulseGlow 3s infinite alternate;
+}
+
+/* Logoya yavaşça nefes alıp veren (pulse) neon animasyonu */
+@keyframes pulseGlow {
+  from { filter: drop-shadow(0 0 8px rgba(38, 198, 218, 0.3)); }
+  to { filter: drop-shadow(0 0 18px rgba(38, 198, 218, 0.9)); }
+}
+
+/* Logonun yanındaki "SkillMatch" yazısının ayarları (Logoya Özel Tematik) */
+.brand-title { 
+  font-size: 1.85rem; /* Logoyla daha iyi eşleşmesi için çok ufak büyüttük */
+  font-weight: 800; 
+  letter-spacing: 0.05em; 
+  margin: 0; 
   
-  .logo-box {
-    width: 2.5rem;
-    height: 2.5rem;
-    border: 2px solid #26C6DA;
-    border-radius: 0.5rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: rgba(38, 198, 218, 0.1);
-    box-shadow: 0 0 15px rgba(38, 198, 218, 0.3);
-  }
-  
-  .logo-box span { font-weight: 800; color: #26C6DA; font-size: 1.25rem; }
-  .brand-title { font-size: 1.75rem; font-weight: 800; letter-spacing: 0.05em; color: #fff; margin: 0; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
-  .brand-title span { color: #26C6DA; }
-  
-  .tabs-container {
-    display: flex;
-    gap: 1.5rem;
-    margin-bottom: 1.5rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  }
-  
-  .tab-btn {
-    background: none; border: none; padding-bottom: 0.75rem;
-    font-size: 1rem; font-weight: 600; color: #9CA3AF;
-    cursor: pointer; position: relative; transition: color 0.3s;
-  }
-  
-  .tab-btn:hover { color: #fff; }
-  .tab-btn.active { color: #26C6DA; text-shadow: 0 0 8px rgba(38, 198, 218, 0.5); }
-  
-  .tab-indicator {
-    position: absolute; bottom: -1px; left: 0;
-    width: 100%; height: 2px; background-color: #26C6DA;
-    box-shadow: 0 0 10px rgba(38, 198, 218, 0.8);
-  }
+  /* Logodaki Mor -> Mavi -> Turkuaz geçişini (gradient) yazının içine yediriyoruz */
+  background: linear-gradient(to right, #A855F7, #26C6DA, #1DE9B6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent; /* Arka planın (gradient'in) yazının içinden görünmesini sağlar */
+
+  /* Gradient ve text-shadow çakışmasın diye drop-shadow kullanıyoruz */
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+
+/* Eğer ileride yazının yarısını beyaz yapmak istersen (Örn: <h1 className="brand-title">Skill<span>Match</span></h1>) */
+.brand-title span { 
+  color: #fff; 
+  -webkit-text-fill-color: #fff; /* Gradient'i ezip düz beyaz yapmak için */
+}
+
+/* Eğer yazının bir kısmını neon yapmak istersen (örn: <span>Skill</span>Match) */
+.brand-title span { color: #26C6DA; }
+
+.tabs-container {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tab-btn {
+  background: none; border: none; padding-bottom: 0.75rem;
+  font-size: 1rem; font-weight: 600; color: #9CA3AF;
+  cursor: pointer; position: relative; transition: color 0.3s;
+}
+
+.tab-btn:hover { color: #fff; }
+.tab-btn.active { color: #26C6DA; text-shadow: 0 0 8px rgba(38, 198, 218, 0.5); }
+
+.tab-indicator {
+  position: absolute; bottom: -1px; left: 0;
+  width: 100%; height: 2px; background-color: #26C6DA;
+  box-shadow: 0 0 10px rgba(38, 198, 218, 0.8);
+}
   
   /* --- 5. ULTRA CAM İNPUTLAR VE BUTONLAR --- */
   .input-group { margin-bottom: 1rem; }
@@ -193,10 +219,33 @@
     border-color: rgba(255, 255, 255, 0.3); color: #fff; transform: translateY(-1px);
   }
   .social-btn svg { width: 18px; height: 18px; }
-  .steam-icon { fill: #fff; }
+
+  /* YENİ EKLENEN: Resim ikonlarını boyutlandırma */
+  .social-img-icon {
+    width: 20px;
+    height: 20px;
+    object-fit: contain; /* Resmin orantısını bozmadan kutuya sığdırır */
+    border-radius: 50%; /* Riot ve Steam ikonları yuvarlak olduğu için kenarları yumuşatır */
+  }
   
+  /* Eski .steam-icon { fill: #fff; } kısmını silebilirsin, artık resim kullanıyoruz */
   .error-box {
     background-color: rgba(239, 68, 68, 0.15); backdrop-filter: blur(8px); border: 1px solid rgba(239, 68, 68, 0.4);
     color: #FCA5A5; padding: 0.75rem; border-radius: 0.5rem;
     margin-bottom: 1rem; font-size: 0.85rem;
   }
+ /* --- 7. KUSURSUZ SMOOTH GEÇİŞ (KAYIT FORMU) --- */
+.register-fields-wrapper {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  /* Kapanırken önce yazılar silikleşsin, sonra kutu toplansın */
+  transition: opacity 0.3s ease-out, max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.register-fields-wrapper.is-open {
+  max-height: 350px; /* 3 inputun sığacağı güvenli alan */
+  opacity: 1;
+  /* Açılırken kutu uzasın, yazılar yavaşça belirtsin */
+  transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease-in 0.2s;
+}
