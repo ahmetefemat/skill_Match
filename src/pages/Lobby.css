@@ -657,6 +657,484 @@
 .bet-summary span { display: block; font-family: 'Space Grotesk', sans-serif; font-size: 12px; color: #dee3e4; font-weight: bold; margin-bottom: 4px; }
 .bet-summary h2 { margin: 0; color: var(--primary); font-size: 28px; font-weight: 700; }
 
+/* --- YENİ: İDDİA OLUŞTUR MODALI (SKILLMATCH PREMIUM) ---
+   Scoped to .claim-modal* so other modals keep their look.
+*/
+.claim-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 3vw, 28px);
+  background:
+    radial-gradient(900px 520px at 18% 0%, color-mix(in srgb, var(--primary) 16%, transparent), transparent 62%),
+    radial-gradient(820px 520px at 85% 12%, color-mix(in srgb, var(--sm-purple) 14%, transparent), transparent 62%),
+    color-mix(in srgb, var(--sm-bg) 78%, transparent);
+  backdrop-filter: blur(10px) saturate(115%);
+  -webkit-backdrop-filter: blur(10px) saturate(115%);
+}
+
+.claim-modal {
+  width: min(600px, 100%);
+  max-height: none;
+  overflow: hidden;
+  overscroll-behavior: contain;
+  border-radius: 24px;
+  padding: 22px 22px 20px;
+  position: relative;
+  isolation: isolate;
+  color: var(--sm-text);
+  background: linear-gradient(135deg, var(--sm-panel), var(--sm-panel-2));
+  border: 1px solid var(--sm-border-strong);
+  box-shadow:
+    0 24px 72px rgba(0, 0, 0, 0.68),
+    0 0 26px color-mix(in srgb, var(--primary) 9%, transparent),
+    0 0 34px color-mix(in srgb, var(--sm-purple) 7%, transparent);
+  animation: claimModalIn 170ms ease-out;
+  will-change: transform, opacity;
+}
+
+@keyframes claimModalIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Keep all real content above decorative layers */
+.claim-modal > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* If content must scroll (short viewports), keep scrollbars hidden */
+.claim-modal {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.claim-modal::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.claim-modal::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: 24px;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--primary) 40%, transparent),
+    color-mix(in srgb, var(--sm-purple) 34%, transparent)
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+.claim-modal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
+  background:
+    radial-gradient(720px 360px at 20% 10%, color-mix(in srgb, var(--primary) 14%, transparent), transparent 60%),
+    radial-gradient(680px 360px at 85% 0%, color-mix(in srgb, var(--sm-purple) 12%, transparent), transparent 58%);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.75;
+}
+
+.claim-modal__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid color-mix(in srgb, var(--sm-border) 70%, transparent);
+}
+
+.claim-modal__title {
+  margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.015em;
+  color: var(--sm-text);
+}
+
+.claim-modal__close {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--sm-border-strong);
+  background: color-mix(in srgb, var(--sm-panel) 85%, transparent);
+  color: var(--sm-text);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  transition: transform 170ms ease, box-shadow 170ms ease, border-color 170ms ease, background 170ms ease;
+  position: relative;
+  z-index: 2;
+}
+
+.claim-modal__close:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+  background: color-mix(in srgb, var(--sm-panel) 85%, transparent);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent),
+    0 0 26px color-mix(in srgb, var(--sm-purple) 18%, transparent);
+}
+
+.claim-modal__close:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--primary) 18%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--primary) 36%, transparent) inset;
+}
+
+/* --- CLAIM GAME SELECTOR (READABLE + STATEFUL) --- */
+.sm-claim-game-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+  position: relative;
+  z-index: 20;
+  pointer-events: auto;
+  isolation: isolate;
+}
+
+.sm-claim-game-button {
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: #101722;
+  color: #f4f7fb;
+  min-height: 50px;
+  border-radius: 14px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  transition: transform 170ms ease, box-shadow 170ms ease, border-color 170ms ease, background 170ms ease, color 170ms ease;
+  will-change: transform;
+  pointer-events: auto;
+  position: relative;
+  z-index: 20;
+}
+
+.sm-claim-game-button--active {
+  background: linear-gradient(135deg, #00f5d4, #a855f7) !important;
+  color: #071016 !important;
+  border-color: rgba(0, 245, 212, 0.9) !important;
+  box-shadow: 0 0 18px rgba(0, 245, 212, 0.32) !important;
+}
+
+.sm-claim-game-button:hover {
+  border-color: rgba(0, 245, 212, 0.55);
+  transform: translateY(-1px);
+}
+
+.sm-claim-game-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(0, 245, 212, 0.18);
+}
+
+.sm-claim-game-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sm-claim-game-icon img {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+.claim-modal__formGroup {
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 1;
+}
+
+.claim-modal__formGroup--targetOpen {
+  z-index: 999999 !important;
+}
+
+.claim-modal__label {
+  display: block;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  color: var(--sm-muted);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  line-height: 1.2;
+}
+
+.claim-modal .custom-select-container {
+  position: relative;
+}
+
+.claim-modal__selectHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 14px;
+}
+
+.claim-modal__selectHeader .arrow {
+  opacity: 0.75;
+  font-size: 12px;
+}
+
+.claim-modal .glass-input,
+.claim-modal__input {
+  height: 46px;
+  background: var(--sm-panel);
+  border: 1px solid var(--sm-border-strong);
+  border-radius: 12px;
+  color: var(--sm-text);
+  padding: 0 14px;
+  transition: border-color 170ms ease, box-shadow 170ms ease, background 170ms ease;
+}
+
+.claim-modal .glass-input:hover {
+  border-color: color-mix(in srgb, var(--sm-border-strong) 70%, var(--sm-text));
+}
+
+.claim-modal .glass-input:focus {
+  border-color: color-mix(in srgb, var(--primary) 55%, transparent);
+  background: color-mix(in srgb, var(--sm-panel) 90%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.claim-modal .custom-select-header {
+  height: 46px;
+  background: var(--sm-panel);
+  border: 1px solid var(--sm-border-strong);
+  border-radius: 12px;
+  color: var(--sm-text);
+  transition: border-color 170ms ease, box-shadow 170ms ease, background 170ms ease;
+}
+
+.claim-modal .custom-select-header:hover,
+.claim-modal .custom-select-header.open {
+  border-color: color-mix(in srgb, var(--primary) 55%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+
+.claim-modal .custom-select-list {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: #101722;
+  color: #f4f7fb;
+  border: 1px solid rgba(0, 245, 212, 0.35);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  max-height: 240px;
+  overflow: auto;
+  z-index: 999999;
+  opacity: 0;
+  transform: translateY(-4px);
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 170ms ease, transform 170ms ease;
+  will-change: transform, opacity;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.claim-modal .custom-select-list.is-open {
+  opacity: 1;
+  transform: translateY(0);
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.claim-modal .custom-select-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.claim-modal .custom-select-list li {
+  margin: 0;
+  padding: 0;
+}
+
+.claim-modal__targetOption {
+  width: 100%;
+  display: block;
+  text-align: left;
+  padding: 12px 12px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #f4f7fb;
+  cursor: pointer;
+  font: inherit;
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.claim-modal__targetOption:hover {
+  background: rgba(0, 245, 212, 0.1);
+  border-color: rgba(0, 245, 212, 0.22);
+}
+
+.claim-modal__targetOption:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(0, 245, 212, 0.16);
+}
+
+.claim-modal__targetOption--active {
+  background: linear-gradient(135deg, rgba(0, 245, 212, 0.22), rgba(168, 85, 247, 0.18));
+  border-color: rgba(0, 245, 212, 0.35);
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.14) inset, 0 10px 24px rgba(0, 0, 0, 0.35);
+}
+
+.claim-modal__summary {
+  margin-top: 18px;
+  border-radius: 18px;
+  padding: 18px 16px;
+  text-align: center;
+  background: var(--sm-panel);
+  border: 1px solid var(--sm-border-strong);
+  box-shadow: inset 0 0 18px color-mix(in srgb, var(--primary) 7%, transparent);
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+.claim-modal__summary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(520px 220px at 50% 0%, color-mix(in srgb, var(--primary) 14%, transparent), transparent 60%),
+    radial-gradient(520px 220px at 50% 120%, color-mix(in srgb, var(--sm-purple) 10%, transparent), transparent 60%);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.claim-modal__summaryMeta,
+.claim-modal__summaryLabel,
+.claim-modal__summaryValue {
+  position: relative;
+  z-index: 1;
+}
+
+.claim-modal__summaryLabel {
+  display: block;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sm-muted);
+}
+
+.claim-modal__summaryValue {
+  margin-top: 8px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 30px;
+  font-weight: 800;
+  color: var(--primary);
+  text-shadow: 0 0 18px color-mix(in srgb, var(--primary) 22%, transparent);
+}
+
+.claim-modal__submit {
+  width: 100%;
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--sm-border-strong);
+  background: linear-gradient(135deg, var(--primary), var(--sm-purple));
+  color: var(--on-primary);
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--primary) 12%, transparent),
+    0 18px 55px color-mix(in srgb, var(--primary) 24%, transparent),
+    0 18px 55px color-mix(in srgb, var(--sm-purple) 16%, transparent);
+  transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
+}
+
+.claim-modal__submit:hover:not(:disabled) {
+  transform: translateY(-1px) scale(1.01);
+  filter: brightness(1.03);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb, var(--primary) 14%, transparent),
+    0 22px 70px color-mix(in srgb, var(--primary) 28%, transparent),
+    0 22px 70px color-mix(in srgb, var(--sm-purple) 20%, transparent);
+}
+
+.claim-modal__submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none;
+  filter: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+
+/* Only allow internal scrolling when viewport height is tight */
+@media (max-height: 780px) {
+  .claim-modal {
+    max-height: calc(100vh - 48px);
+    overflow: auto;
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 520px) {
+  .claim-modal-overlay {
+    padding: 16px;
+  }
+
+  .claim-modal {
+    border-radius: 20px;
+    padding: 20px 18px 18px;
+    max-height: calc(100vh - 32px);
+    overflow: auto;
+    overflow-x: hidden;
+  }
+
+  .claim-modal__title {
+    font-size: 20px;
+  }
+
+  .claim-modal__summaryValue {
+    font-size: 26px;
+  }
+}
+
 /* --- MAÇ GEÇMİŞİ (MATCH HISTORY) STİLLERİ --- */
 .history-section { display: flex; flex-direction: column; gap: 12px; }
 .history-table-header { display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr 1.2fr; padding: 0 24px 12px; border-bottom: 1px solid rgba(131, 148, 143, 0.1); color: var(--text-muted); font-family: 'Space Grotesk', sans-serif; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; }

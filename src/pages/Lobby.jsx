@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import "./Lobby.css";
 import { useAuth } from "../hooks/useAuth";
@@ -44,18 +44,52 @@ const Lobby = () => {
   const [isCreatingMatch, setIsCreatingMatch] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
+  const claimGames = useMemo(
+    () => [
+      { id: "LoL", label: "LoL", iconSrc: lolIcon, iconAlt: "LoL" },
+      { id: "Valorant", label: "Valorant", iconSrc: valoIcon, iconAlt: "Valorant" },
+      // Data layer uses "CS:GO" today; UI label is "CS2".
+      { id: "CS:GO", label: "CS2", iconSrc: cs2Icon, iconAlt: "CS2" },
+    ],
+    []
+  );
+
+  const toggleTargetDropdown = useCallback(() => {
+    setIsOpen((prev) => !prev);
+  }, []);
+
+  const closeTargetDropdown = useCallback(() => {
+    setIsOpen(false);
+  }, []);
+
+  const handleSelectTarget = useCallback((value) => {
+    console.log("Selected target:", value);
+    setSelectedTarget(value);
+    setIsOpen(false);
+  }, []);
+
   // OYUNLARA GÖRE DİNAMİK HEDEFLER
-  const targets = {
-    'Valorant': ['En az 10 Kill', 'En az 20 Kill', 'MVP Ol', 'Maç Kazan'],
-    'LoL': ['İlk Kan (First Blood)', 'En az 15 Asist', 'Ejderha Çal', 'Maç Kazan'],
-    'CS:GO': ['En az 20 Kill', '1v2 Clutch At', 'MVP Ol', 'Maç Kazan']
-  };
+  const targets = useMemo(
+    () => ({
+      Valorant: ["En az 10 Kill", "En az 20 Kill", "MVP Ol", "Maç Kazan"],
+      LoL: ["İlk Kan (First Blood)", "En az 15 Asist", "Ejderha Çal", "Maç Kazan"],
+      "CS:GO": ["En az 20 Kill", "1v2 Clutch At", "MVP Ol", "Maç Kazan"],
+    }),
+    []
+  );
 
   // İLK HEDEF SEÇİMİNİ OTOMATIK YAP
-  const targetList = targets[selectedGame];
   useEffect(() => {
-    setSelectedTarget(targetList[0]);
-  }, [selectedGame, targetList]);
+    const targetList = targets[selectedGame] ?? [];
+
+    if (targetList.length === 0) {
+      setSelectedTarget("");
+      return;
+    }
+
+    setSelectedTarget((prev) => (targetList.includes(prev) ? prev : targetList[0]));
+    setIsOpen(false);
+  }, [selectedGame, targets]);
 
   // BAKIYE YÜKLE
   useEffect(() => {
@@ -670,68 +704,135 @@ const Lobby = () => {
           İDDİA OLUŞTUR MODALI (ULTRA GLASSY)
       ========================================== */}
         {showModal && (
-          <div className="modal-overlay">
-            <div className="create-modal">
-              <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
-              <h2 className="modal-title">Yeni İddia Oluştur</h2>
-              
-              <div className="game-options" style={{ display: 'flex', gap: '10px' }}>
-    <button className={`game-opt ${selectedGame === 'LoL' ? 'active' : ''}`} onClick={() => setSelectedGame('LoL')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <img src={lolIcon} alt="LoL" style={{ width: '18px', height: '18px' }} /> LoL
-    </button>
-    <button className={`game-opt ${selectedGame === 'Valorant' ? 'active' : ''}`} onClick={() => setSelectedGame('Valorant')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <img src={valoIcon} alt="Valorant" style={{ width: '18px', height: '18px' }} /> Valorant
-    </button>
-    <button className={`game-opt ${selectedGame === 'CS:GO' ? 'active' : ''}`} onClick={() => setSelectedGame('CS:GO')} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <img src={cs2Icon} alt="CS:GO" style={{ width: '18px', height: '18px' }} /> CS:GO
-    </button>
-</div>
-           <div className="form-group">
-  <label className="form-label">İddia Hedefi</label>
-  <div className="custom-select-container">
-    <div 
-      className={`custom-select-header ${isOpen ? 'open' : ''}`} 
-      onClick={() => setIsOpen(!isOpen)}
-    >
-      {selectedTarget}
-      <span className="arrow">{isOpen ? '▲' : '▼'}</span>
-    </div>
-    
-    {isOpen && (
-      <ul className="custom-select-list">
-        {targets[selectedGame].map(t => (
-          <li 
-            key={t} 
-            onClick={() => {
-              setSelectedTarget(t);
-              setIsOpen(false);
-            }}
-          >
-            {t}
-          </li>
-        ))}
-      </ul>
-    )}
-  </div>
-</div>
-
-              <div className="form-group">
-                <label className="form-label">Bahis Miktarı (Kredi)</label>
-                <input type="number" className="glass-input" value={betAmount} onChange={(e) => setBetAmount(Number(e.target.value))} step="50" min="50" />
+          <div className="claim-modal-overlay" onClick={() => setShowModal(false)} role="presentation">
+            <div
+              className="claim-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Yeni İddia Oluştur"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="claim-modal__header">
+                <h2 className="claim-modal__title">Yeni İddia Oluştur</h2>
+                <button
+                  className="claim-modal__close"
+                  onClick={() => setShowModal(false)}
+                  type="button"
+                  aria-label="Kapat"
+                >
+                  <span aria-hidden="true">×</span>
+                </button>
               </div>
 
-              <div className="bet-summary">
-                <span>TOPLAM BAHİS</span>
-                <h2>{betAmount} Kredi</h2>
+              <div className="sm-claim-game-selector" role="group" aria-label="Oyun seçimi">
+                {claimGames.map((game) => (
+                  <button
+                    key={game.id}
+                    type="button"
+                    className={`sm-claim-game-button ${
+                      selectedGame === game.id ? "sm-claim-game-button--active" : ""
+                    }`}
+                    onClick={() => {
+                      setSelectedGame(game.id);
+                    }}
+                  >
+                    <span className="sm-claim-game-icon" aria-hidden="true">
+                      <img src={game.iconSrc} alt={game.iconAlt} loading="lazy" />
+                    </span>
+                    <span>{game.label}</span>
+                  </button>
+                ))}
               </div>
 
-              <button 
-                className="btn-primary" 
-                style={{width: '100%', marginTop: '24px', padding: '16px'}} 
+              <div
+                className={`claim-modal__formGroup claim-modal__formGroup--target ${
+                  isOpen ? "claim-modal__formGroup--targetOpen" : ""
+                }`}
+              >
+                <label className="claim-modal__label">İddia Hedefi</label>
+                <div className="custom-select-container">
+                  <div
+                    className={`custom-select-header claim-modal__selectHeader ${isOpen ? "open" : ""}`}
+                    onClick={toggleTargetDropdown}
+                    role="button"
+                    tabIndex={0}
+                    aria-haspopup="listbox"
+                    aria-expanded={isOpen}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        toggleTargetDropdown();
+                      }
+                      if (e.key === "Escape") {
+                        e.preventDefault();
+                        closeTargetDropdown();
+                      }
+                    }}
+                  >
+                    {selectedTarget || "Hedef seçin"}
+                    <span className="arrow" aria-hidden="true">{isOpen ? "▲" : "▼"}</span>
+                  </div>
+
+                  <ul
+                    className={`custom-select-list claim-modal__selectList ${isOpen ? "is-open" : ""}`}
+                    role="listbox"
+                    aria-label="İddia hedefleri"
+                    aria-hidden={!isOpen}
+                    onKeyDown={(e) => {
+                      if (e.key === "Escape") {
+                        e.preventDefault();
+                        closeTargetDropdown();
+                      }
+                    }}
+                  >
+                    {(targets[selectedGame] ?? []).map((t) => (
+                      <li key={t} role="option" aria-selected={selectedTarget === t}>
+                        <button
+                          type="button"
+                          className={`claim-modal__targetOption ${
+                            selectedTarget === t ? "claim-modal__targetOption--active" : ""
+                          }`}
+                          tabIndex={isOpen ? 0 : -1}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            handleSelectTarget(t);
+                          }}
+                        >
+                          {t}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="claim-modal__formGroup">
+                <label className="claim-modal__label">Bahis Miktarı (Kredi)</label>
+                <input
+                  type="number"
+                  className="glass-input claim-modal__input"
+                  value={betAmount}
+                  onChange={(e) => setBetAmount(Number(e.target.value))}
+                  step="50"
+                  min="50"
+                />
+              </div>
+
+              <div className="claim-modal__summary" aria-label="Toplam bahis">
+                <div className="claim-modal__summaryMeta">
+                  <span className="claim-modal__summaryLabel">TOPLAM BAHİS</span>
+                </div>
+                <div className="claim-modal__summaryValue">{betAmount} Kredi</div>
+              </div>
+
+              <button
+                className="btn-primary claim-modal__submit"
                 onClick={handleCreateMatch}
                 disabled={isCreatingMatch}
+                type="button"
               >
-                {isCreatingMatch ? 'Oluşturuluyor...' : 'İDDİAYI YAYINLA'}
+                {isCreatingMatch ? "Oluşturuluyor..." : "İDDİAYI YAYINLA"}
               </button>
             </div>
           </div>

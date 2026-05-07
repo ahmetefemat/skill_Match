@@ -5,7 +5,7 @@ import './Login.css';
 
 // Görsellerimiz
 import bgImage from '../assets/crossover-bg.jpg'; 
-import logo from '../assets/logo.svg';
+import BrandLogo from "../components/BrandLogo.jsx";
 import riotIcon from '../assets/landing/riot.png'; 
 import steamIcon from '../assets/landing/steam.png'; 
 
@@ -121,8 +121,7 @@ const Login = () => {
       <div className="glass-card">
         
       <div className="brand-header">
-          <img src={logo} alt="SkillMatch Logo" className="brand-logo" />
-          <h1 className="brand-title">SkillMatch</h1>
+        <BrandLogo variant="login" />
         </div>
 
         <div className="tabs-container">

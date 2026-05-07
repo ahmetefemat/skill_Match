@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
-import logo from "../assets/logo.svg";
 import "./AppNavbar.css";
+import BrandLogo from "./BrandLogo.jsx";
 
 const NAV_ITEMS = [
   { label: "Lobby", to: "/lobby" },
@@ -31,15 +31,7 @@ export default function AppNavbar({ balance, username, avatarUrl }) {
     <header className="appNavbar" role="banner">
       <div className="landing-container appNavbar-inner">
         <div className="appNavbar-left">
-          <div className="appNavbar-brand" aria-label="SkillMatch">
-            <img
-              className="appNavbar-logo"
-              src={logo}
-              alt="SkillMatch Logo"
-              style={{ width: 44, height: "auto", maxHeight: 44, objectFit: "contain" }}
-            />
-            <span className="appNavbar-brandText">SkillMatch</span>
-          </div>
+          <BrandLogo variant="navbar" className="appNavbar-brand" />
         </div>
 
         <nav className="appNavbar-center" aria-label="Primary">
