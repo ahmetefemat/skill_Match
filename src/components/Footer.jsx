@@ -1,7 +1,7 @@
 import xIcon from "../assets/landing/x.png";
 import instagramIcon from "../assets/landing/instagram.png";
 import youtubeIcon from "../assets/landing/youtube.png";
-import logo from "../assets/logo.svg";
+import BrandLogo from "./BrandLogo.jsx";
 
 export default function Footer({ id = "footer" } = {}) {
 	return (
@@ -9,14 +9,7 @@ export default function Footer({ id = "footer" } = {}) {
 			<div className="landing-container">
 				<div className="footer-top">
 					<div className="footer-brand">
-						<div className="landing-brand footer-brandRow">
-							<img
-								className="landing-brandMark"
-								src={logo}
-								alt="SkillMatch Logo"
-								style={{ width: 26, height: "auto", maxHeight: 26, objectFit: "contain" }}
-							/>
-						</div>
+						<BrandLogo variant="footer" className="footer-brandRow" />
 						<p className="footer-tagline">Bet on your skill. Win with performance.</p>
 						<div className="footer-social" aria-label="Social links">
 							{/* TODO: Replace with real SkillMatch social media links */}

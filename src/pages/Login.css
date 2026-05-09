@@ -70,50 +70,8 @@
   display: flex;
   justify-content: center; /* İkisini tam ortaya hizalıyoruz */
   align-items: center;
-  gap: 1rem; /* Logo ve yazının arasına şık bir boşluk */
   margin-bottom: 2rem;
 }
-
-.brand-logo {
-  height: 45px; /* Yazıyla yan yana dengeli durması için 45px ideal */
-  width: auto;
-  object-fit: contain;
-  /* Logoya efsanevi neon parlama efektini veriyoruz */
-  filter: drop-shadow(0 0 12px rgba(38, 198, 218, 0.6));
-  animation: pulseGlow 3s infinite alternate;
-}
-
-/* Logoya yavaşça nefes alıp veren (pulse) neon animasyonu */
-@keyframes pulseGlow {
-  from { filter: drop-shadow(0 0 8px rgba(38, 198, 218, 0.3)); }
-  to { filter: drop-shadow(0 0 18px rgba(38, 198, 218, 0.9)); }
-}
-
-/* Logonun yanındaki "SkillMatch" yazısının ayarları (Logoya Özel Tematik) */
-.brand-title { 
-  font-size: 1.85rem; /* Logoyla daha iyi eşleşmesi için çok ufak büyüttük */
-  font-weight: 800; 
-  letter-spacing: 0.05em; 
-  margin: 0; 
-  
-  /* Logodaki Mor -> Mavi -> Turkuaz geçişini (gradient) yazının içine yediriyoruz */
-  background: linear-gradient(to right, #A855F7, #26C6DA, #1DE9B6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent; /* Arka planın (gradient'in) yazının içinden görünmesini sağlar */
-
-  /* Gradient ve text-shadow çakışmasın diye drop-shadow kullanıyoruz */
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
-}
-
-/* Eğer ileride yazının yarısını beyaz yapmak istersen (Örn: <h1 className="brand-title">Skill<span>Match</span></h1>) */
-.brand-title span { 
-  color: #fff; 
-  -webkit-text-fill-color: #fff; /* Gradient'i ezip düz beyaz yapmak için */
-}
-
-/* Eğer yazının bir kısmını neon yapmak istersen (örn: <span>Skill</span>Match) */
-.brand-title span { color: #26C6DA; }
 
 .tabs-container {
   display: flex;

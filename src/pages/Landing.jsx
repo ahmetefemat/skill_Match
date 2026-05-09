@@ -7,8 +7,8 @@ import lolImg from "../assets/landing/lol.png";
 import valorantImg from "../assets/landing/valorant.png";
 import cs2Img from "../assets/landing/cs2.png";
 import poppyImg from "../assets/landing/lol-poppy.png";
-import logo from "../assets/logo.svg";
 import Footer from "../components/Footer.jsx";
+import BrandLogo from "../components/BrandLogo.jsx";
 
 const FeatureIcon = ({ type }) => {
 	const common = {
@@ -257,25 +257,7 @@ export default function Landing() {
 			{/* 1) Navbar */}
             <header className="landing-navbar">
                 <div className="landing-container landing-navbarInner">
-                    <div className="landing-brand" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-                        <img
-                            className="landing-brandMark"
-                            src={logo}
-                            alt="SkillMatch Logo"
-                            style={{ width: 52, height: "auto", maxHeight: 52, objectFit: "contain" }}
-                        />
-                        {/* SKILLMATCH YAZISI */}
-                        <span style={{ 
-                            fontSize: '1.5rem', 
-                            fontWeight: '800', 
-                            letterSpacing: '-0.5px',
-                            fontFamily: 'sans-serif', // Projenin ana fontu neyse ona çekebilirsin
-                            userSelect: 'none'
-                        }}>
-                            <span style={{ color: '#FFFFFF' }}>Skill</span>
-                            <span style={{ color: '#26C6DA' }}>Match</span>
-                        </span>
-                    </div>
+					<BrandLogo variant="landing" />
 
                     {/* TODO: Replace hash links with real routes (React Router) when ready */}
                     <nav className="landing-navLinks" aria-label="Primary">

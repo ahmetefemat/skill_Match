@@ -47,3 +47,131 @@ html {
 button, a, input, select {
   transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* ============================================
+   SKILLMATCH BRAND SYSTEM (LOGO + WORDMARK)
+   ============================================ */
+
+.sm-brand {
+  --sm-brand-icon-size: 44px;
+  --sm-brand-font-size: 18px;
+  --sm-brand-gap: 14px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sm-brand-gap);
+  white-space: nowrap;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.sm-brand-icon {
+  width: var(--sm-brand-icon-size);
+  height: var(--sm-brand-icon-size);
+  object-fit: contain;
+  display: block;
+  filter: drop-shadow(0 0 10px rgba(0, 245, 212, 0.22));
+  transform: translateZ(0);
+}
+
+.sm-brand-text {
+  display: inline-flex;
+  align-items: baseline;
+  font-family: "Sora", "Space Grotesk", Inter, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  font-weight: 800;
+  font-size: var(--sm-brand-font-size);
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  white-space: nowrap;
+  transform: translateZ(0);
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.38));
+}
+
+.sm-brand-skill {
+  color: rgba(244, 247, 251, 0.97);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.sm-brand-match {
+  display: inline-block;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+  background: linear-gradient(
+    96deg,
+    #00f5d4 0%,
+    #7c4dff 56%,
+    #a855f7 100%
+  );
+  background-size: 100% 100%;
+  background-position: 50% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 10px rgba(0, 245, 212, 0.06);
+  filter: drop-shadow(0 0 10px rgba(0, 245, 212, 0.06));
+}
+
+/* Lightweight interaction polish */
+.sm-brand,
+.sm-brand * {
+  transition: transform 170ms ease, filter 170ms ease, opacity 170ms ease;
+}
+
+.sm-brand:hover .sm-brand-icon {
+  filter: drop-shadow(0 0 14px rgba(0, 245, 212, 0.26));
+}
+
+.sm-brand:hover .sm-brand-match {
+  filter: drop-shadow(0 0 12px rgba(0, 245, 212, 0.08));
+}
+
+/* Variant presets */
+.sm-brand--navbar {
+  --sm-brand-icon-size: 48px;
+  --sm-brand-font-size: 18px;
+  --sm-brand-gap: 14px;
+}
+
+.sm-brand--footer {
+  --sm-brand-icon-size: 28px;
+  --sm-brand-font-size: 14px;
+  --sm-brand-gap: 10px;
+}
+
+.sm-brand--landing {
+  --sm-brand-icon-size: 52px;
+  --sm-brand-font-size: 20px;
+  --sm-brand-gap: 14px;
+}
+
+.sm-brand--login {
+  --sm-brand-icon-size: 58px;
+  --sm-brand-font-size: 26px;
+  --sm-brand-gap: 16px;
+}
+
+@media (max-width: 520px) {
+  .sm-brand--navbar {
+    --sm-brand-icon-size: 40px;
+    --sm-brand-font-size: 16px;
+    --sm-brand-gap: 10px;
+  }
+
+  .sm-brand--landing {
+    --sm-brand-icon-size: 44px;
+    --sm-brand-font-size: 18px;
+  }
+
+  .sm-brand--login {
+    --sm-brand-icon-size: 50px;
+    --sm-brand-font-size: 22px;
+  }
+}
