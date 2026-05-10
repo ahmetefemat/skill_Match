@@ -1241,3 +1241,16 @@
     align-items: stretch;
   }
 }
+/* --- ÇİFT SCROLLBAR AMELİYATI (PROFILE) --- */
+.profile-page::-webkit-scrollbar,
+.profile-wrapper::-webkit-scrollbar,
+.profile-container::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera için gizler */
+}
+
+.profile-page, 
+.profile-wrapper, 
+.profile-container {
+  -ms-overflow-style: none !important;  /* IE ve Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}
