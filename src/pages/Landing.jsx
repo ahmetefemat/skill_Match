@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import "./Landing.css";
@@ -233,18 +233,39 @@ const stats = [
 export default function Landing() {
     const { user, logout } = useAuth();
 
-    const handleLogout = async (e) => {
-        e.preventDefault();
-        
-        try {
-            if (logout) {
-                await logout();
-            }
-        } catch (error) {
-            console.error("Çıkış işlemi sırasında hata:", error);
+	const handleLogout = async (e) => {
+		e.preventDefault(); // 1. Sayfanın kendini yenilemesini engeller (Şart)
+		
+		try {
+			if (logout) {
+				await logout(); // 2. Arka planda çıkış işlemini yapar
+				
+				// 3. Çıkış yaptıktan sonra login'e atmasını ezip, burada kalmasını söyleriz
+				navigate('/'); 
+			}
+		} catch (error) {
+			console.error("Çıkış işlemi sırasında hata:", error);
+		}
+	};
+    // ---- BİZİM EKLEDİĞİMİZ MODAL MANTIĞI ----
+    const [infoModal, setInfoModal] = useState({ isOpen: false, type: "" });
+
+    const getModalContent = () => {
+        switch (infoModal.type) {
+            case "nasil":
+                return { title: "Nasıl Çalışır?", text: "SkillMatch, espor tutkunlarını adil ve rekabetçi bir ortamda buluşturur. Hesabını bağla, bakiye yükle, hedefini seç ve lobideki açık iddialara katıl. Kazanan hesabı sistem otomatik doğrular ve ödülü anında cüzdanına yansıtır!" };
+            case "ozellikler":
+                return { title: "Özellikler", text: "Sıfır hile toleransı, anında bakiye transferi, Riot Games & Steam API entegrasyonu ile otomatik maç sonucu onayı ve sadece yeteneğe dayalı eşleştirme sistemi." };
+            case "destek":
+                return { title: "Destek Merkezi", text: "Bir sorun mu yaşıyorsun? Arena kuralları, bakiye işlemleri veya itirazlar için 7/24 Discord sunucumuz üzerinden veya destek@skillmatch.com adresinden bize ulaşabilirsin." };
+            default:
+                return { title: "", text: "" };
         }
     };
-	return (
+    const modalData = getModalContent();
+    // ------------------------------------------
+
+    return (
 		<div className="landing">
 			{/* Deep layered background */}
 			<div className="landing-bg" aria-hidden="true">
@@ -260,17 +281,17 @@ export default function Landing() {
 					<BrandLogo variant="landing" />
 
                     {/* TODO: Replace hash links with real routes (React Router) when ready */}
-                    <nav className="landing-navLinks" aria-label="Primary">
-                        <a className="landing-navLink" href="#games">
-                            Nasıl Çalışır?
-                        </a>
-                        <a className="landing-navLink" href="#features">
-                            Özellikler
-                        </a>
-                        <a className="landing-navLink" href="#footer">
-                            Destek
-                        </a>
-                    </nav>
+					<nav className="landing-navLinks" aria-label="Primary">
+    <a className="landing-navLink" href="#" onClick={(e) => { e.preventDefault(); setInfoModal({ isOpen: true, type: 'nasil' }); }}>
+        Nasıl Çalışır?
+    </a>
+    <a className="landing-navLink" href="#" onClick={(e) => { e.preventDefault(); setInfoModal({ isOpen: true, type: 'ozellikler' }); }}>
+        Özellikler
+    </a>
+    <a className="landing-navLink" href="#" onClick={(e) => { e.preventDefault(); setInfoModal({ isOpen: true, type: 'destek' }); }}>
+        Destek
+    </a>
+</nav>
 
 					<div className="landing-navActions">
                         {user ? (
@@ -486,6 +507,19 @@ export default function Landing() {
 
 			{/* 7) Footer */}
 			<Footer />
-		</div>
-	);
+			{/* BİZİM EFSANE MODAL EKRANI */}
+            {infoModal.isOpen && (
+                <div className="nav-modal-overlay" onClick={() => setInfoModal({ isOpen: false, type: '' })}>
+                    <div className="nav-modal-content" onClick={(e) => e.stopPropagation()}>
+                        <button className="nav-modal-close" onClick={() => setInfoModal({ isOpen: false, type: '' })}>×</button>
+                        <h2>{modalData.title}</h2>
+                        <div className="nav-modal-body">
+                            <p>{modalData.text}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+            
+        </div> /* Bu satır zaten senin dosyanın en sonundaki kapanış div'i, buna dokunma */
+    );
 }

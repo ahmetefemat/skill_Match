@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import "./Lobby.css";
 import { useAuth } from "../hooks/useAuth";
 import { auth, db } from "../services/firebase";
@@ -15,6 +15,10 @@ import lolIcon from "../assets/landing/lol-icon.png";
 import valoIcon from "../assets/landing/valorant-icon.png";
 import cs2Icon from "../assets/landing/cs2-icon.png";
 const Lobby = () => {
+  // --- YENİ EKLENEN: Sinyal okuyucuyu başlattık ---
+  const location = useLocation();
+  // ------------------------------------------------
+
   // AUTH VE USER DATA
   const { loading: authLoading } = useAuth();
   const user = auth.currentUser;
@@ -22,6 +26,15 @@ const Lobby = () => {
   // ANA NAVİGASYON STATE'İ
   const [activeMenu, setActiveMenu] = useState('LOBBY');
   const [activeFilter, setActiveFilter] = useState('Tümü');
+  
+  // --- YENİ EKLENEN: Cüzdan sinyalini yakalayan radar ---
+  useEffect(() => {
+    if (location.state?.openWallet) {
+      setActiveMenu('WALLET');
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
+  // ------------------------------------------------------
   
   // CÜZDAN STATE'LERİ
   const [currentBalance, setCurrentBalance] = useState(0);
@@ -283,13 +296,14 @@ const Lobby = () => {
     }
   };
 
+ 
   // AYARLAR
-  const menus = [
-    { id: "LOBBY", label: "Lobi", icon: "⚏" },
-    { id: "WALLET", label: "Cüzdan", icon: "💳" },
-    { id: "MATCH HISTORY", label: "Maç Geçmişi", icon: "⏱" },
-  ];
-
+ // AYARLAR (Eski haline geri getiriyoruz)
+ const menus = [
+  { id: "LOBBY", label: "Lobi", icon: "⚏" },
+  { id: "WALLET", label: "Cüzdan", icon: "💳" }, // <-- BUNU GERİ EKLE KANKA
+  { id: "MATCH HISTORY", label: "Maç Geçmişi", icon: "⏱" },
+];
   if (authLoading || balanceLoading) {
     return <div className="p-10 text-white">Yükleniyor...</div>;
   }
@@ -326,27 +340,28 @@ const Lobby = () => {
         avatarUrl={user?.photoURL}
       />
 
-      {/* Secondary (in-page) navigation for Lobby sections */}
-      <div className="lobby-subHeader">
-        <div className="landing-container lobby-subHeaderInner">
-          <div className="lobby-tabs" role="tablist" aria-label="Lobby sections">
-            {menus.map((menu) => (
-              <button
-                key={menu.id}
-                type="button"
-                onClick={() => setActiveMenu(menu.id)}
-                className={`lobby-tab ${activeMenu === menu.id ? "isActive" : ""}`}
-              >
-                <span aria-hidden="true" className="lobby-tabIcon">
-                  {menu.icon}
-                </span>
-                {menu.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
+   {/* Secondary (in-page) navigation for Lobby sections */}
+<div className="lobby-subHeader">
+  <div className="landing-container lobby-subHeaderInner">
+    <div className="lobby-tabs" role="tablist" aria-label="Lobby sections">
+      {menus
+        .filter((menu) => menu.id !== "WALLET") // <-- CÜZDANI GÖRSEL OLARAK BURADA SİLDİK
+        .map((menu) => (
+          <button
+            key={menu.id}
+            type="button"
+            onClick={() => setActiveMenu(menu.id)}
+            className={`lobby-tab ${activeMenu === menu.id ? "isActive" : ""}`}
+          >
+            <span aria-hidden="true" className="lobby-tabIcon">
+              {menu.icon}
+            </span>
+            {menu.label}
+          </button>
+        ))}
+    </div>
+  </div>
+</div>
       {/* Main content */}
       <main className="main-content lobby-main">
         <div className="landing-container">

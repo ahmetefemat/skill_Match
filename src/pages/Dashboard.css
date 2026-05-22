@@ -1240,3 +1240,16 @@
     font-size: 16px;
   }
 }
+/* --- ÇİFT SCROLLBAR AMELİYATI (DASHBOARD) --- */
+.dashboard-page::-webkit-scrollbar,
+.dashboard-wrapper::-webkit-scrollbar,
+.dashboard-container::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera için gizler */
+}
+
+.dashboard-page, 
+.dashboard-wrapper, 
+.dashboard-container {
+  -ms-overflow-style: none !important;  /* IE ve Edge */
+  scrollbar-width: none !important;  /* Firefox */
+}

@@ -22,7 +22,9 @@ export const AuthProvider = ({ children }) => {
           .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
       });
       
-      window.location.href = "/login";
+      // --- İŞTE SİHİRLİ DOKUNUŞ BURADA ---
+      // "/login" yerine "/" yazdık. Artık çıkış yapınca zorla logine atmayacak, ana sayfada (Landing) kalacaksın.
+      window.location.href = "/";
     } catch (error) {
       console.error("Çıkış işlemi sırasında hata:", error);
     }

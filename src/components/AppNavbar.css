@@ -255,3 +255,148 @@
     padding: 6px 10px;
   }
 }
+/* --- APP NAVBAR ÖZEL BİLGİ MODALI --- */
+.nav-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(8, 8, 10, 0.85); /* Karanlık ve arka planı odak dışı bırakır */
+  backdrop-filter: blur(8px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999; /* En üstte durması için */
+}
+
+.nav-modal-content {
+  background: linear-gradient(145deg, #0f0f15, #08080a);
+  border: 1px solid #26C6DA; /* Turkuaz neon ince çizgi */
+  box-shadow: 0 0 30px rgba(38, 198, 218, 0.15);
+  border-radius: 12px;
+  width: 90%;
+  max-width: 450px;
+  padding: 35px 30px;
+  position: relative;
+  text-align: center;
+  animation: navModalFadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.nav-modal-close {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: #a0a0b0;
+  font-size: 28px;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.nav-modal-close:hover {
+  color: #26C6DA;
+  transform: scale(1.1);
+}
+
+.nav-modal-content h2 {
+  color: #26C6DA;
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 24px;
+  letter-spacing: 1px;
+}
+
+.nav-modal-body p {
+  color: #c0c0d0;
+  line-height: 1.7;
+  font-size: 16px;
+  margin: 0;
+}
+
+@keyframes navModalFadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(-20px) scale(0.95); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1); 
+  }
+}
+
+/* ==========================================================================
+   YENİ BAKİYE VE YÜKLEME BUTONU (TAM ENTEGRE & ORTALANMIŞ VERSİYON)
+   ========================================================================== */
+
+/* 1. ANA BUTON KUTUSU */
+.appNavbar-balanceActionBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(38, 198, 218, 0.05); /* Hafif turkuaz arka plan */
+  border: 1px solid rgba(38, 198, 218, 0.2);
+  padding: 6px 6px 6px 12px; /* Rozet sağa tam otursun diye sağ padding dar */
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #fff;
+  min-width: 140px; /* Kutunun belli bir genişliği olsun ki yazılar ortalansın */
+}
+
+.appNavbar-balanceActionBtn:hover {
+  background: rgba(38, 198, 218, 0.15);
+  border-color: rgba(38, 198, 218, 0.6);
+  box-shadow: 0 0 15px rgba(38, 198, 218, 0.2);
+  transform: translateY(-1px);
+}
+
+/* 2. İÇİNDEKİ YAZI KISMI (YAZILARI TAM ORTAYA HİZALAR) */
+.appNavbar-balanceInfo {
+  display: flex;
+  align-items: center; /* Yazıları dikeyde ortalar */
+  justify-content: center; /* Yazıları kutunun tam merkezine çeker */
+  flex: 1; /* Butonun kalan tüm alanını kaplar */
+  gap: 6px;
+}
+
+.appNavbar-balanceLabel {
+  font-size: 0.75rem;
+  color: #9CA3AF;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-top: 2px; /* Sayıyla görsel olarak dengeler */
+}
+
+.appNavbar-balanceValue {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #26C6DA; /* Turkuaz neon renk */
+}
+
+/* 3. YANDAKİ KÜÇÜK YUVARLAK '+' ROZETİ */
+.appNavbar-plusBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #26C6DA, #1890A3);
+  color: #071018; /* SVG ikonu koyu lacivert/siyah olur */
+  width: 28px; 
+  height: 28px;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 4. SVG İKONUNUN BOYUTU */
+.appNavbar-plusBadge svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* 5. ARTI BUTONU İÇİN HOVER (ÜSTÜNE GELİNCE DÖNME) EFEKTİ */
+.appNavbar-balanceActionBtn:hover .appNavbar-plusBadge {
+  transform: scale(1.1) rotate(90deg); /* Hafif büyür ve kendi etrafında döner */
+  box-shadow: 0 0 12px #26C6DA;
+}

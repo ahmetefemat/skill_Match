@@ -1515,3 +1515,21 @@ input[type="number"]:focus {
   background-color: rgba(38, 198, 218, 0.1);
   color: #26C6DA;
 }
+/* --- ÇİFT SCROLLBAR AMELİYATI --- */
+/* O fazladan çıkan içerik çubuğunu tamamen gizler, sadece ana sayfanın çubuğu kalır */
+.lobby-page::-webkit-scrollbar {
+  display: none; /* Chrome, Safari ve Opera için */
+}
+
+.lobby-page {
+  -ms-overflow-style: none;  /* IE ve Edge için */
+  scrollbar-width: none;  /* Firefox için */
+}
+
+/* Sayfanın genelinde sağa sola taşmayı ve ana çakışmayı engellemek için */
+html, body {
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+/* -------------------------------- */
