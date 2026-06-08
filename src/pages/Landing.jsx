@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.js";
 import "./Landing.css";
 
@@ -232,6 +232,7 @@ const stats = [
 
 export default function Landing() {
     const { user, logout } = useAuth();
+    const navigate = useNavigate();
 
 	const handleLogout = async (e) => {
 		e.preventDefault(); // 1. Sayfanın kendini yenilemesini engeller (Şart)
