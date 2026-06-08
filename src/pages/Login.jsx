@@ -18,7 +18,6 @@ const Login = () => {
   const [password, setPassword] = useState('');
   
   // Sadece Kayıt İçin Ekstra Alanlar
-  const [passwordConfirm, setPasswordConfirm] = useState(''); // Şifre Tekrar
   const [birthDate, setBirthDate] = useState(''); // Doğum Tarihi
   const [username, setUsername] = useState(''); 
   const [error, setError] = useState('');
@@ -49,12 +48,6 @@ const Login = () => {
 
     try {
       if (activeTab === 'register') {
-        // Şifre eşleşme kontrolü
-        if (password !== passwordConfirm) {
-          setError("Şifreler birbiriyle eşleşmiyor!");
-          return;
-        }
-
         // Şifre uzunluğu kontrolü
         if (password.length < 6) {
           setError("Şifre en az 6 karakter olmalıdır!");

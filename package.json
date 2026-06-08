@@ -8,6 +8,7 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
+    "server": "cd functions && node server.js",
     "firebase:emulator": "firebase emulators:start",
     "test:firestore-rules": "node firestore-rules-test.cjs"
   },
